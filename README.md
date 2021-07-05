@@ -1,5 +1,8 @@
 # stock-buy-hold-sell-classification
 This is my project for Data Career Day at Algoritma School of Data Sciece.
+
+Rpubs link for readme: https://rpubs.com/VicNP/proposal-dcd
+
 # Background
 
 <b>Is today the right time for you to invest in stock?</b>
@@ -9,8 +12,6 @@ Jika ditanya apakah hari ini anda sudah berinvestasi? Kebanyakan orang Indonesia
 Pilihan investasi yang dapat dipilih juga beragam antara lain investasi pasar modal(contoh produknya adalah saham, reksa dana, obligasi/surat hutang, <i>Exchange Traded Fund</i>), investasi emas (contoh produknya adalah emas batangan, emas perhiasan) dan invetasi properti (contoh produknya adalah tanah, rumah, apartamen).
 
 Dalam projek ini akan fokus ke investasi pasar modal yaitu saham. Saham dapat didefinisikan sebagai tanda penyertaan modal seseorang atau pihak (badan usaha) dalam suatu perusahaan atau perseroan terbatas. Dengan menyertakan modal tersebut, maka pihak tersebut memiliki klaim atas pendapatan perusahaan, klaim atas asset perusahaan, dan berhak hadir dalam Rapat Umum Pemegang Saham (RUPS). Akan tetapi tidak semua perusahaan di Indoensia bisa dibeli sahamnya karena tidak semua perusahaan dibuka secara umum, keputsan sebuah perusahaan ingin menjual sahamnya atau tidak merupakan keputusan sepihak dari perusahaan tersebut maka dari itu tidak semua perusahaan bisa dibeli sahamnya.
-
-![*Source: Instagram - @indonesiastockexchange](C:\Users\user\Desktop\Algoritma\DCD\Scraping Stock Data\Proposal Final\jumlah investor saham.png)
 
 Pada 17 Feburari 2021 lalu, Bursa Efek Indonesia (BEI) menyatakan bahwa total investor saham di Indonesia sudah mencapai 2 juta Single Investor Identification (SID). Dari pernyataan BEI timbulah peratanyaan, apakah angka investor saham yang sudah mencapai 2 juta SID sudah banyak dari total penduduk Indonesia yang sampai dengan 270 juta? Jawabannya tentu saja tidak, karena itu hanya sekitar 0.8% dari total penduduk Indonesia. Hal tersebut bisa terjadi selain kurangnya pemahaman tentang pentingnya berinvestasi, dikarenakan kebanyakan masyarakat Indonesia merasa kesulitan untuk memahami teori analisa yang dibutuhkan ketika berinvestasi di saham. 
 
@@ -68,13 +69,9 @@ Output yang akan dihasilkan berupa dashboard yang akan dibuat dengan R Shinny. D
 
 Pada bagian prediction akan menampilkan inti dari tujuan projek ini yaitu berupaa rekomendasi dari hasil prediksi apakah hari ini harus "Buy", "Sell" atau "Hold" saham tersebut berdasarkan beberapa analisa teknnikal yang dilakukan dan akan disimpulkan dengan barometer. Dibagian ini juga akan menampilkan pergerakan harga saham dalam bentuk grafik berserta dengan tambahan informasti mengenai saham tersebut.
 
-![*Dashboard bagian prediction](C:/Users/user/Desktop/Algoritma/DCD/Scraping Stock Data/Proposal Final/dashboard prediction.png)
-
 <b>Bagian Simulation:</b>
 
 Pada bagian simulation akan menunjukan manfaat yang didaptkan jika menggunakan machine learning untuk prediksi berdasarkan analisa teknikal yang akan dibandingkan tanpa menggunakan machine learning dan analisa teknikal apapun. 
-
- ![*Dashboard bagian simulation](C:/Users/user/Desktop/Algoritma/DCD/Scraping Stock Data/Proposal Final/dashboard simulation.png)
 
 # Business Impact
 
