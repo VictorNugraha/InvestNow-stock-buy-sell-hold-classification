@@ -1,0 +1,789 @@
+---
+title: "BBRI"
+author: "Victor Nugraha"
+date: "7/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Preparation
+
+## Library Setup
+
+```{r, message=FALSE, warning=FALSE}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+## Data Collection
+
+Untuk mengambil data saham yang diinginkan bisa menggunakan fungsi `tq_get()`, akan tetapi jika menggunakan fungsi ini data yang didatpakan tidaklah aktual melainkan data H-1. 
+
+Pada awalnya peenarikan data untuk masing-masing sahamnya akan diambil pada bulan April 2020 karena  pada saat pandemic covid-19 semua harga terjadi penurunan yang cukup dalam pada akhir bulan Maret 2020 akan tetapi jika hanya menggunakan data dari bulan April 2020 sampai sekarang <i>target variable</i> yang akan didapat hanya sedikit, oleh karena itu masing-masing saham datanya kan diambil dari awal tahun 2018 sampau dengan sekarang. 
+
+<i>NB: UNTUK KEBUTUHAN PROPOSAL HANYA AKAN MENARIK DATA DARI SATU SEKTOR DAN SATU SAHAM SAJA</i>
+
+<b>Sektor Bank: BRI</b>
+
+```{r}
+bbri <- tq_get(x = "BBRI.JK", #Nama saham 
+               get = "stock.prices", #"stock.prices" berarti mengambil dari Yahoo Finance
+               from = " 2018-01-01") #Dari kapan data itu ingin diambil
+
+head(bbri)
+```
+
+```{r}
+#Cek missing value
+colSums(is.na(bbri))
+```
+
+```{r}
+#Menghilangkan missng value
+bbri <- bbri %>% 
+  drop_na()
+
+colSums(is.na(bbri))
+```
+
+```{r}
+#Cek tipe data
+glimpse(bbri)
+```
+Dari hasil observasi pengecekan tipe data, tidak ada tipe data yang harus diubah (kolom symbol bisa diubah menjadi tipe data faktor), dan sudah tidak ada kolom yang mengandung missing value. Data saham dari Bank Rakyat Indonesia sudah siap untuk olah lebih lanjut di EDA.
+
+# Exploratory Daya Analysis {.tabset}
+
+Pada tahapan EDA akan ada dua hal yang dilakukan yaitu pembuatan grafik untuk memperlihatkan pergerakan harga saham per harinya dan tahapan kedua adalah melakukan analisa teknikal untuk mendapatkan <i>target variable</i> yang berupa label <i>Buy, Hold atau Sell</i>.
+
+<i>NB: UNTUK KEBUTUHAN PROPOSAL HANYA AKAN MELAKUKAN EDA DARI SATU SEKTOR DAN SATU SAHAM SAJA</i>
+
+## Chart {.tabset}
+
+Grafik yang akan ditampilkan di dashboard akan ada dua varian yaitu <i>basic chart dan advance chart</i>.
+<br>- Basic chart akan berisikan line chart.
+<br>- Advance chart akan berisikan candlestick chart yang dipadukan dengan bar chart. 
+
+<b>Sektor Bank: BRI</b>
+
+<b><br>1. Basic chart: Line chart</b>
+
+Line chart itu sendiri merupakan grafik riwayat data nilai harga suatu saham yang hanya terbentuk dari nilai harga penutupan suatu saham dalam periode waktu tertentu pada sebuah pergerakannya di bursa saham. Pada line chart tidak ditemukan data-data nilai harga pembukaan, nilai harga tertinggi, dan nilai harga terendah, dari suatu gerakan saham. Maka dari itu line chart di kategorikan sebagai basic chart agar para investor baru tidak terlalu bingung ketika melihat pergerakan harga saham.
+
+```{r}
+bbri_mutate <- bbri %>% 
+  mutate(label = glue(
+    "
+    Date: {date}
+    Price: {close}
+    "
+  ))
+
+#Membuat line plot
+bbri_plot <- ggplot(data = bbri_mutate,
+  mapping = aes(
+    x = date,
+    y = close,
+    text = label,
+    group = 1
+  )) +
+  geom_line(color = "black") +
+  labs(title = "BBRI",
+       subtitle = "",
+       x = "Date",
+       y = "Price (Rp)") +
+  theme_classic()
+
+#Megubah dari plot biasa menjadi plotly agar lebih informatif
+bbri_plotly <- ggplotly(bbri_plot, tooltip = "label")
+bbri_plotly
+```
+
+<b><br>2. Advance chart: Candlestick + Bar chart</b>
+
+Pada bagian advance chart akan lebih rumit jika dibandingkan dengan basic chart, karena dibagian ini akan ada 2 chart yang digabungkan menjadi satu bagian yaitu candlestick dan bar chart. 
+
+Candlestick chart merupakan grafik riwayat data nilai harga suatu saham yang terbentuk dari nilai harga pembukaan, nilai harga tertinggi, nilai harga terendah dan nilai harga penutupan dari gerakan suatu saham dalam periode waktu tertentu pada sebuah pergerakannya di bursa saham. Biasanya di dalam candlestick akan diisi dengan warna hijau atau merah, kedua warna tersebut memiliki arti yang berbeda. Warna hijau jika penutupan lebih besar dari penutupan sebelumnya tetapi lebih rendah dari pembukaan dan warna merah terjadi saat penutupan di bawah pembukaan dan penutupan sebelumnya.
+
+Sedangkan Bar chart akan digunakan untuk memberikan informasi tentang volume persediaan. Volume dalam stok dapat menjadi barometer aktivitas dan arah di masa depan. Volume mengukur jumlah kontrak yang dipertukarkan selama sesi perdagangan. Ini mengukur aktivitas pasar.
+
+```{r}
+#Membuat candlestick plot 
+bbri_ploty2 <- bbri %>%
+  plot_ly(x = ~date,
+          type = "candlestick", 
+          open = ~open, 
+          close = ~close, 
+          high = ~high,
+          low = ~low,
+          name = "Price (Rp)") %>%
+  layout(
+    xaxis = list(
+      rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 Day",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 5,
+            label = "5 Days",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Month",
+            step = "week",
+            stepmode = "backward"),
+          list(
+            count = 3,
+            label = "3 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 6,
+            label = "6 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Year",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 2,
+            label = "2 Years",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            label = "Max",
+            step = "all"))),
+      rangeslider = list(visible = FALSE)),
+         yaxis = list(title = "Price (Rp)",
+                      showgrid = TRUE,
+                      showticklabels = TRUE))
+
+#Membuat bar plot untuk volume saham BRI
+bbri_ploty3 <- bbri %>%
+  plot_ly(x=~date, 
+          y=~volume, 
+          type='bar', 
+          name = "Volume") %>%
+  layout(yaxis = list(title = "Volume"))
+
+#Menggabungkan 2 plot menjadi 1 plot
+bbri_fig <- subplot(bbri_ploty2, bbri_ploty3, heights = c(0.7,0.2), nrows=2,
+             shareX = TRUE, titleY = TRUE)
+bbri_fig
+```
+
+Dari kedua grafik diatas dapat dilihat bahwa saham BRI dari sektor bank memiliki performa yang baik, hal itu dapat dilihat sebelum terjadinya pandemic covid-19 saham BRI berhasil menguat sebesar 23% hanya dalam waktu 2 tahun saja. Selain itu dapat dilihat bagaimana saham BRI begitu cepatnya bangkit dari keterpurukan setelah wabah covid-19, dari harga sahamnya turun ke Rp. 2.170,00 dan berhasil naik lagi dan mencipatkan harga tertinggi terbaru yaitu sebesar Rp. 4.890 di awal tahun 2021.
+
+## Analisa Teknikal {.tabset}
+
+Analisa teknikal merupakan cara menganalisis pergerakan harga di pasar saham menggunakan perangkat statistik, seperti grafik dan rumus matematis. 
+
+Dalam porjek ini ada 4 macam analisa teknikal yang akan digunakan:
+<br>- Simple Moving Average (SMA)
+<br>- Exponential Moving Average (EMA)
+<br>- Moving Average Convergence Divergence (MACD)
+<br>- Relative Strength Index (RSI)
+
+Dalam EDA ini dari 4 macam analisa teknikal diatas akan digunakan untuk mendapatkan prediktor yang dibutuhkan dan target variable yang berupa keputusan untuk <i>Buy, Hold atau Sell</i> yang akan digunakan nanti untuk membuat model machine learning. Dikarenakan target variable sangat krusial untuk melakukan pelatihan terhadap model machine learning yang akan digunakan nanti, analisa teknikal dari kelima cara diatas akan dilakukan sesempurna mungkin untuk menghindari kesalahan dalam memberikan keputusan.
+
+<b>Sektor Bank: BBRI</b>
+
+### SMA {.tabset}
+
+Simple Moving Average (SMA) adalah salah satu analisa teknikal dengan menambahkan deretan harga terkini pada suatu rentang waktu, lalu membaginya sejumlah periode tersebut. Maka, nilai rata-rata pun bisa didapat.
+
+SMA dihitung dengan rumus sebagai berikut:
+
+$$SMA = (Pn1 + Pn2 + Pn3 + ...Pnx)/n $$
+Dimana:
+<br>- P = nilai rata-rata berdasarkan n
+<br>- n = jumlah periode waktu (Contoh periode = 5, berarti harga yang akan dihitung harga 4 hari kebelakang)
+
+Untuk menentukan berapakah periode waktu dalam perhitungan tidak ada peraturan khususnya akan tetapi jika target yang diinginkan adalah jual beli dalam waktu yang singkat makan periodenya bisa dikecilkan dan jika ingin dalam waktu yang panjang maka periode waktunya bisa di perbesar. Akan tetapi jika waktunya dipersingkat akan meningkatkan potensi untuk terjadinya kesalahan dalam proses pengambilan keputusan.
+
+Dalam menentukan kapan waktu yang tepat untuk membeli maupun menjual dibutuhkan 4 SMA dengan periode waktu yang berbeda untuk dilakukan perbandingan, setelah melakukan beberapa percobaan untuk saham BRI ini akan menggunakan SMA 5, SMA 30, SMA 50 & SMA 70.
+
+SMA 5 disini berfungsi sebagai batas bawah dan SMA 70 disini berfungsi sebagai batas atas, kedua batasan tersebut akan sangat berguna sebagai indikator bahwa harga saham sedang dalam kondisi "termurah" dan "termahal". Sedangkan SMA 20 dan SMA 30 disini sebagai indikator pergerakan harga saham tersebut sedang menurun atau menaik.
+
+```{r}
+#Membuat object baru
+bbri_sma <- bbri
+
+# SMA 5
+bbri_sma$SMA5 <- SMA(Ad(bbri_sma),
+                n = 5)
+
+# SMA 30
+bbri_sma$SMA30 <- SMA(Ad(bbri_sma),
+                n = 30)
+
+# SMA 50
+bbri_sma$SMA50 <- SMA(Ad(bbri_sma),
+                      n = 50)
+
+# SMA 70
+bbri_sma$SMA70 <- SMA(Ad(bbri_sma),
+                n = 70)
+```
+
+Sinyal "Buy" dan "Sell":
+<br>- Buy -> Ketika Harga Close Adjusted < H-1 SMA 5 & SMA 30 < H-1 SMA 50
+<br>- Sell -> Ketika Harga Close Adjusted > H-1 SMA 70 & SMA 20 > H-1 SMA 50
+
+Tujuan kenapa dibanginkan dengan harga H-1 dan ataupun SMA H-1 untuk memastikan harga hari itu sudah lebih murah jika dibandingkan dengan harga kemarin ketika mengambil keputusan untuk membeli, begitu juga sebaliknya. Dengan memberikan parameter seperti itu diharapkan harga saham yang dibeli adalah harga yang termurah dan pada saat harga tersebut dijual merupakan harga yang paling tinggi.
+
+```{r}
+# Membuat sinyal Buy, Sell & Hold
+bbri_sma <- bbri_sma %>%
+  mutate(
+    signal.SMA = case_when(
+      adjusted < lag(SMA5, 1) & SMA30 < lag(SMA50, 1) ~ "Buy",
+      adjusted > lag(SMA70, 1) & SMA30 > lag(SMA50, 1) ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+
+tail(bbri_sma)
+```
+
+<b>Evaluasi Analisa SMA</b>
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+bbri_sma %>% 
+  group_by(decision.SMA) %>% 
+  filter(! is.na(SMA70)) %>% 
+  summarise(freq = n())
+```
+
+Dari awal tahun 2018 sampai dengan akhir Juni 2021 dengan menggunakan metode SMA terdapat total 40 sinyal "Buy", 11 sinyal "Sell" dan 758 sinyal "Hold"
+
+```{r}
+bbri_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA70))
+```
+
+Jika diperhatikan satu persatu dari keseluruhan rekomendasi "Buy" maupun "Sell" dari metode SMA yang sudah difilter diatas, hasil rekomendasi tidak ada yang salah atau rekomendasi memberikan keuntungan tanpa adanya kerugian sedikitpun. Dengan hasil seperti diatas target variable dari SMA bisa di indikasikan sudah sempurna karena target variable tersebut akan digunakan sebagai salah satu perdiktor dalam model klasifikasi.   
+
+Untuk proposal evaluasi yang akan ditunjukan adalah evaluasi manual dengan mekanisme yang akan dijelaskan dibawah ini, pada dashboard nanti evaluasi akan dilakukan dengan metode <i>backtest</i>.
+
+Mekanisme evaluasi manual:
+<br>- Setiap kolom decision.SMA memeberikan sinyal "Buy" maka saham akan dibeli sebanyak 1 lot akan dibeli dengan harga dari kolom open pada hari itu.
+<br>- Selama kolom decision.SMA tetap memberikan sinyal "Buy" maka saham akan dibeli lagi sebanyak 1 lot dengan harga dari kolom open pada hari itu dan akan dihitung rata-rata harga beluinya.
+<br>- Ketika kolom decision.SMA memberika sinyal "Sell" untuk pertama kalinya maka semua saham yang dimiliki akan dijual dengan harga dari kolom close pada hari itu.
+
+<i>Minimum pembeliaan sebuah saham adalah 1 lot/100 lembar</i>
+
+```{r}
+#Buy-Sell dengan SMA
+bbri_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA70)) %>% 
+  select(c("date", "open", "close", "decision.SMA")) %>% 
+  head(9)
+```
+
+```{r}
+#Total keuntungan denga SMA
+evaluasi_SMA <- ((3330*100) - (((3640*100) + (3630*100) + (3220*100) + (3170*100) + (3210*100) + (3020*100) + (2910*100) + (2960*100))/8))*8
+evaluasi_SMA
+```
+
+```{r}
+#Total keuntungan tanpa SMA
+evaluasi_wo_SMA <- ((3330*100) - (3640*100))
+evaluasi_wo_SMA
+```
+
+Dari hasil observasi yang menunjukan indikator Buy-Sell pertama kali dapat dilihat bahwa dari total 8 lot yang dibeli, total keuntungan yang didapatkan sebesar Rp. 88.000,00 dalam kurun waktu 5 bulan, sedangkan tanpa menggunakan SMA akan mengalami kerugian sebesar Rp. 31.000,00 jika dibandingkan dengan kurun waktu yang sama.
+
+### EMA {.tabset}
+
+Exponential Moving Average (EMA) mirip dengan SMA, yaitu sebuah analisa teknikal dengan mengukur arah tren selama periode waktu tertentu. Namun, SMA hanya menghitung rata-rata data harga sedangkan EMA menerapkan bobot lebih pada data yang lebih terkini. Karena perhitungannya yang memiliki bobot, EMA akan mengikuti harga lebih dekat daripada SMA.
+
+EMA dihitung dengan rumus sebagai berikut:
+$$EMAsekarang = (Harga Closing - EMAsebelum) x Multiplier + EMAsebelum $$
+Dimana:
+<br>- HargaClosing = harga closing pada hari itu
+<br>- EMAsebelum =  EMA periode sebelumnya (Contoh periode = 5, berarti harga yang akan dihitung harga 4 hari kebelakang)
+<br>- Multiplier = konstanta eksponensial
+
+Dalam menentukan kapan waktu yang tepat untuk membeli maupun menjual dibutuhkan 4 EMA dengan periode waktu yang berbeda untuk dilakukan perbandingan, setelah melakukan beberapa percobaan untuk saham BRI akan menggunakan EMA 5, EMA 15, EMA 50 dan EMA 70. 
+
+EMA 5 disini berfungsi sebagai batas bawah dan EMA 70 disini berfungsi sebagai batas atas, kedua batasan tersebut akan sangat berguna sebagai indikator bahwa harga saham sedang dalam kondisi "termurah" dan "termahal". Sedangkan EMA 15 dan EMA 50 disini sebagai indikator pergerakan harga saham tersebut sedang menurun atau menaik.
+
+```{r}
+# Membuat objek baru 
+bbri_ema <- bbri
+
+# EMA 5
+bbri_ema$EMA5 <- EMA(Ad(bbri_ema),
+                n = 5)
+
+# EMA 15
+bbri_ema$EMA15 <- EMA(Ad(bbri_ema),
+                n = 15)
+
+# EMA 50
+bbri_ema$EMA50 <- EMA(Ad(bbri_ema),
+                n = 50)
+
+# EMA 70
+bbri_ema$EMA70 <- EMA(Ad(bbri_ema),
+                n = 70)
+```
+
+Sinyal "Buy" dan "Sell":
+<br>- Buy -> Close Adjusted < H-1 EMA 5 & EMA 15 < EMA 50
+<br>- Sell -> Close Adjusted > H-1 EMA 70 & EMA 15 > EMA 50
+
+Tujuan kenapa dibanginkan dengan harga H-1 dan ataupun EMA H-1 untuk memastikan harga hari itu sudah lebih murah jika dibandingkan dengan harga kemarin ketika mengambil keputusan untuk membeli, begitu juga sebaliknya. Dengan memberikan parameter seperti itu diharapkan harga saham yang dibeli adalah harga yang termurah dan pada saat harga tersebut dijual merupakan harga yang paling tinggi.
+
+```{r}
+bbri_ema <- bbri_ema %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA5, 1) & EMA15 < lag(EMA50, 1) ~ "Buy",
+      adjusted > lag(EMA70, 1) & EMA15 > lag(EMA50, 1) ~ "Sell",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+
+tail(bbri_ema)
+```
+
+<b>Evaluasi Analisa EMA</b>
+
+```{r}
+bbri_ema %>% 
+  filter(! is.na(EMA70)) %>% 
+  group_by(decision.EMA) %>% 
+  summarise(freq = n())
+```
+
+Dari awal tahun 2018 sampai dengan akhir Juni 2021 dengan menggunakan metode SMA terdapat total 50 sinyal "Buy", 22 sinyal "Sell" dan 737 sinyal "Hold".
+
+```{r}
+bbri_ema %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA70))
+```
+
+Jika diperhatikan satu persatu dari keseluruhan rekomendasi "Buy" maupun "Sell" dari metode EMA yang sudah difilter diatas, hasil rekomendasi tidak ada yang salah atau rekomendasi memberikan keuntungan tanpa adanya kerugian sedikitpun. Dengan hasil seperti diatas target variable dari EMA bisa di indikasikan sudah sempurna karena target variable tersebut akan digunakan sebagai salah satu perdiktor dalam model klasifikasi. 
+
+Untuk proposal evaluasi yang akan ditunjukan adalah evaluasi manual dengan mekanisme yang akan dijelaskan dibawah ini, pada dashboard nanti evaluasi akan dilakukan dengan metode <i>backtest</i>.
+
+Mekanisme evaluasi manual:
+<br>- Setiap kolom decision.EMA memeberikan sinyal "Buy" maka saham akan dibeli sebanyak 1 lot akan dibeli dengan harga dari kolom open pada hari itu.
+<br>- Selama kolom decision.EMA tetap memberikan sinyal "Buy" maka saham akan dibeli lagi sebanyak 1 lot dengan harga dari kolom open pada hari itu dan akan dihitung rata-rata harga beluinya.
+<br>- Ketika kolom decision.EMA memberika sinyal "Sell" untuk pertama kalinya maka semua saham yang dimiliki akan dijual dengan harga dari kolom close pada hari itu.
+
+<i>Minimum pembeliaan sebuah saham adalah 1 lot/100 lembar</i>
+
+```{r}
+bbri_ema %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA70)) %>% 
+  select(c("date", "open", "close", "decision.EMA")) %>% 
+  head(2)
+```
+
+```{r}
+#Total keuntungan denga EMA
+evaluasi_EMA <- (3660*100) - (3640*100)
+evaluasi_EMA
+```
+
+```{r}
+#Total keuntungan tanpa EMA
+evaluasi_wo_EMA <- (3660*100) - (3640*100)
+evaluasi_wo_EMA
+```
+
+Dari hasil observasi yang menunjukan indikator Buy-Sell pertama kali dapat dilihat bahwa dari total 8 lot yang dibeli, total keuntungan yang didapatkan sebesar Rp. 2.000,00 hanya dalam waktu 6 hari saja. Sedangkan tanpa menggunakan EMA hasilnya akan sama saja.
+
+### MACD {.tabset}
+
+Moving Average Convergence Divergence (MACD) adalah sebuah indikator dalam analisis teknikal yang menggambarkan hubungan antara dua moving average dalam sebuah tren harga aset.
+
+MACD dihitung dengan rumus sebagai berikut:
+$$MACD = Nsmaller-Period EMA - Nbigger-PeriodEMA $$
+Dimana:
+<br>Nsmaller-Period EMA = EMA dengan periode yang lebih kecil
+<br>Nbigger-Period EMA = EMA dengan periode yang lebih besar
+
+MACD akan mgnggunakan EMA sebagai salah satu indikatornya. MACD yang paling populer biasanya dihitung dengan mengurangi Exponential Moving Average (EMA) 26-periode dari EMA 12-periode. MACD juga membutuhkan satu EMA lagi yaitu EMA 9-periode, EMA-9 periode yang dapat berfungsi sebagai pemicu untuk sinyal beli dan jual. Setelah melakukan beberapa percobaan EMA yang akandigunakan di analisa MACD adalah EMA5, EMA15 dan EMA50.
+
+
+```{r}
+# Membuat objek baru
+bbri_macd <- bbri
+
+# EMA 15
+bbri_macd$EMA15 <- bbri_ema$EMA15
+
+# EMA 50
+bbri_macd$EMA50 <- bbri_ema$EMA50
+
+# MACD
+bbri_macd$MACD <- bbri_ema$EMA15 - bbri_ema$EMA50
+```
+
+Sinyal "Buy" dan "Sell":
+<br>- Buy -> Ketika Close Adjusted < H-1 EMA 5 & Ketika MACD < 0 (Contoh periode = 5, berarti harga yang akan dihitung harga 4 hari kebelakang)
+<br>- Sell -> Ketika Close Adjusted > H-1 EMA 5 & Ketika MACD > 0
+
+Sedikit berbeda dengan SMA dan EMA, sinyal pada MACD akan menggunakan 0 sebagai parameternya. Ketika hasil pengurangan dari EMA15 dan EMA50 lebih kecil di bandingkan 0 atau minus itu merupakan sebuah indikasi bahwa harga saham tersebut sedang mengalami penurunan, begitu juga sebaliknya. Sedangkan untuk perbandingan harga adjusted dengan EMA5 itu sama saja dengan SMA maupun EMA.
+
+```{r}
+bbri_macd <- bbri_macd %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(bbri_ema$EMA5, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(bbri_ema$EMA5, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+
+tail(bbri_macd)
+```
+
+<b>Evaluasi Analisa MACD</b>
+
+```{r}
+bbri_macd %>% 
+  filter(! is.na(EMA50)) %>% 
+  group_by(decision.MACD) %>% 
+  summarise(freq = n())
+```
+
+Dari awal tahun 2018 sampai dengan akhir Juni 2021 dengan menggunakan metode SMA terdapat total 23 sinyal "Buy", 33 sinyal "Sell" dan 773 sinyal "Hold". Dengan menggunakan indikator MACD sinyal "Sell" lebih banyak jika dibandingkan dengan sinyal "Buy", tidak seperti indikator SMA dan EMA yang lebih banyak memberikan sinyal "Buy" dibandingkan "Sell". Hal tersebut bisa menjadi indikasi bahwa analisa dengan menggunakan MACD lebih dapat menditeksi pergerakan harga saham pada posisi atas/harga tinggi.
+
+```{r}
+bbri_macd %>% 
+  filter(decision.MACD != "Hold" & ! is.na(EMA50))
+```
+
+Jika diperhatikan satu persatu dari keseluruhan rekomendasi "Buy" maupun "Sell" dari metode MACD yang sudah difilter diatas, hasil rekomendasi tidak ada yang salah atau rekomendasi memberikan keuntungan tanpa adanya kerugian sedikitpun. Dengan hasil seperti diatas target variable dari MACD bisa di indikasikan sudah sempurna karena target variable tersebut akan digunakan sebagai salah satu perdiktor dalam model klasifikasi.
+
+Untuk proposal evaluasi yang akan ditunjukan adalah evaluasi manual dengan mekanisme yang akan dijelaskan dibawah ini, pada dashboard nanti evaluasi akan dilakukan dengan metode backtest.
+
+Mekanisme evaluasi manual:
+<br>- Setiap kolom decision.MACD memeberikan sinyal "Buy" maka saham akan dibeli sebanyak 1 lot akan dibeli dengan harga dari kolom open pada hari itu.
+<br>- Selama kolom decision.MACD tetap memberikan sinyal "Buy" maka saham akan dibeli lagi sebanyak 1 lot dengan harga dari kolom open pada hari itu dan akan dihitung rata-rata harga beluinya.
+<br>- Ketika kolom decision.MACD memberika sinyal "Sell" untuk pertama kalinya maka semua saham yang dimiliki akan dijual dengan harga dari kolom close pada hari itu.
+
+<i>Minimum pembeliaan sebuah saham adalah 1 lot/100 lembar</i>
+
+```{r}
+#Buy-Sell dengan MACD
+bbri_macd %>% 
+  filter(decision.MACD != "Hold" & ! is.na(EMA50)) %>% 
+  select(c("date", "open", "close", "decision.MACD")) %>% 
+  head(8)
+```
+
+```{r}
+#Total keuntungan dengan MACD
+evaluasi_MACD <- ((3180*100) - (((3640*100) + (3080*100) + (3110*100) + (3140*100) + (2970*100) + (2890*100))/6))*6
+evaluasi_MACD
+```
+
+```{r}
+#Total keuntungan tanpa MACD
+evaluasi_wo_MACD <- (3180*100) - (3640*100)
+evaluasi_wo_MACD
+```
+
+Dari hasil observasi yang menunjukan indikator Buy-Sell pertama kali dapat dilihat bahwa dari total 6 lot yang dibeli, total keuntungan yang didapatkan sebesar Rp. 25.000,00 dalam kurun waktu 6 bulan, sedangkan tanpa menggunakan MACD akan mengalami kerugian sebesar Rp. 46.000,00 jika dibandingkan dengan kurun waktu yang sama.  
+
+### RSI {.tabset}
+
+Relative Strength Index (RSI) merupakan salah satu indikator analisis teknikal yang bisanya digunakan untuk mengukur besarnya harga sebuah aset. Indikator ini dilakukan untuk mengevaluasi apakah aset tersebut terbilang dalam posisi jenuh beli (overbought) atau jenuh jual (oversold).
+
+RSI dihitung dengan rumus sebagai berikut:
+$$RSI = 100 – (100/(1+RS))$$
+Dimana:
+- RS = Rata-rata kenaikan dalam periode / Rata-rata penurunan dalam periode. (Contoh periode = 5, berarti harga yang akan dihitung harga 4 hari kebelakang)
+
+Para RSI, tidak akan menggunakan parameter dari SMA ataupun EMA sama sekali. RSI akan menggunakan parameter kalkulasi dari rumus RSI itu sendiri. Periode standar penghitungan adalah 14, sebagaimana yang direkomendasikan oleh Welles Wilder. Periode tersebut boleh diubah-ubah karena tidak memiliki peraturan khusus, baik menaikkan atau menurunkan. Namun, hal tersebut akan memengaruhi sensitivitas RSI. Misalnya, periode 10 lebih cepat mencapai tingkat overbought atau oversold dibandingkan periode 20. RSI yang akan digunakan untuk BRI adalah RSI7, RSI14, RSI30 dan RSI70, dikarenakan setelah beberapa percobaan 4 RSI tersebutlah yang menunjukan hasil paling baik.
+
+```{r}
+# Membuat objek baru
+bbri_rsi <- bbri
+
+# RSI 7
+bbri_rsi$RSI7 <- RSI(Ad(bbri_rsi),
+                     n =7)
+
+# RSI 14
+bbri_rsi$RSI14 <- RSI(Ad(bbri_rsi), 
+                      n=14)
+
+# RSI 30
+bbri_rsi$RSI30 <- RSI(Ad(bbri_rsi), 
+                      n=30)
+
+# RSI 70
+bbri_rsi$RSI70 <- RSI(Ad(bbri_rsi), 
+                      n=70)
+```
+
+Sinyal "Buy" dan "Sell":
+<br>- Buy -> Ketika Harga Close Adjusted < Harga H-1 Close Adjusted & RSI7 > RSI14 & RSI7 < RSI20
+<br>- Sell -> Ketika Harga Close Adjusted > Harga H-1 Close Adjusted & RSI7 < RSI14 & RSI7 > RSI80 
+
+Pada analisa teknikal dengan menggunakan RSI sinyal "Buy" dan "Sell" akan tergantung berdasarkan pergerakan RSI 7 yang akan dibandingkan dengan RSI 14, RSI30 dan RSI 70. Jika pergerakan RSI 7 sudah lebih besar dibandingkan dengan RSI14 itu merupakan indikasi bahwa harga akan segera naik begitu juga sebaliknya. Sedangkan RSI 30 dan RSI 70 akan digunakan sebagai indikator "overbought" dan RSI 70 akan digunakan sebagai indikator "oversell", jika RSI 7 lebih kecil dibandingkan RSI 70 itu menjadi indikator bahwa harga saham tersebut tidak dalam harga yang paling mahal dan bila RSI 7 lebih besar dibandingkan RSI 30 itu menjadi indikator bahwa harga saham tersebut sedang tidak dalam harga termurah. 
+
+```{r}
+bbri_rsi <- bbri_rsi %>% 
+  mutate(
+    signal.RSI = case_when(
+      adjusted < lag(adjusted,1) & RSI7 > RSI14 & RSI7 < RSI70 ~ "Buy",
+      adjusted > lag(adjusted,1) & RSI7 < RSI14 & RSI7 > RSI30 ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+
+tail(bbri_rsi)
+```
+
+<b>Evaluasi Analisa RSI</b>
+
+```{r}
+bbri_rsi %>% 
+  group_by(decision.RSI) %>% 
+  summarise(freq = n())
+```
+
+Dari awal tahun 2018 sampai dengan akhir Juni 2021 dengan menggunakan metode SMA terdapat total 15 sinyal "Buy", 9 sinyal "Sell" dan 784 sinyal "Hold". Sinyal "Buy" dan "Sell" pada indikator RSI tidaklah sebanyak jika dibandingkan dengan SMA, EMA dan MACD, hal tersebut bisa terjadi karena penggunaan periode RSI 7 dan 14 sebagai penilai pergerakan harga saham yang bisa menyebabkan analisa menjadi lebih ketat.
+
+```{r}
+bbri_rsi %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI70))
+```
+
+Jika diperhatikan satu persatu dari keseluruhan rekomendasi "Buy" maupun "Sell" dari metode SMA yang sudah difilter diatas, hasil rekomendasi tidak ada yang salah atau rekomendasi memberikan keuntungan tanpa adanya kerugian sedikitpun.  
+
+Untuk proposal evaluasi yang akan ditunjukan adalah evaluasi manual dengan mekanisme yang akan dijelaskan dibawah ini, pada dashboard nanti evaluasi akan dilakukan dengan metode <i>backtest</i>.
+
+Mekanisme evaluasi manual:
+<br>- Setiap kolom decision.RSI memeberikan sinyal "Buy" maka saham akan dibeli sebanyak 1 lot akan dibeli dengan harga dari kolom open pada hari itu.
+<br>- Selama kolom decision.RSI tetap memberikan sinyal "Buy" maka saham akan dibeli lagi sebanyak 1 lot dengan harga dari kolom open pada hari itu dan akan dihitung rata-rata harga beluinya.
+<br>- Ketika kolom decision.RSI memberika sinyal "Sell" untuk pertama kalinya maka semua saham yang dimiliki akan dijual dengan harga dari kolom close pada hari itu.
+
+**Minimum pembeliaan sebuah saham adalah 1 lot/100 lembar**
+
+```{r}
+#Buy-Sell dengan RSI
+bbri_rsi %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI70)) %>% 
+  select(c("date", "open", "close", "decision.RSI")) %>% 
+  head(3)
+```
+
+```{r}
+#Total keuntungan dengan RSI
+evaluasi_RSI <- ((3750*100) - (((3640*100) + (3260*100))/2))*2
+evaluasi_RSI
+```
+
+```{r}
+#Total keuntungan tanpa RSI
+evaluasi_wo_RSI <- (3750*100) - (3640*100)
+evaluasi_wo_RSI
+```
+
+Dari hasil observasi yang menunjukan indikator Buy-Sell pertama kali dapat dilihat bahwa dari total 6 lot yang dibeli, total keuntungan yang didapatkan sebesar Rp. 60.000,00 dalam kurun waktu 10 bulan. Sedangkan tanpa menggunakan RSI, investor tetap akan mendapatkan keuntungan sebesar Rp. 11.000,00, hal ini tidak buruk tapi sangat disayangkan karena sudah menunggu dalam waktu yang lama tapi hanya mendapatkan keuntungan yang tidak teralalu besar.
+
+### Indikator Gabungan {.tabset}
+
+Setelah mendapatkan hasil analisa yang dibutuhkan, gabungkanlah kedalam satu data frame baru. Tujuan dari menggabungkan semua indikator menjadi satu adalah untuk mendapatkan keputusan akhir, untuk menilai apakah saham tersebut harus dibeli atau dijual pada hari itu. Hasil dari keputusan akhir itu juga akan digunakan sebagai target variable untuk melatih model klasifikasi.
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+bbri_analisa <- cbind(bbri,bbri_sma$SMA5, bbri_sma$SMA30, bbri_sma$SMA50, bbri_sma$SMA70, bbri_ema$EMA5, bbri_ema$EMA15, bbri_ema$EMA50, bbri_ema$EMA70, bbri_macd$MACD, bbri_rsi$RSI7, bbri_rsi$RSI14, bbri_rsi$RSI30, bbri_rsi$RSI70, bbri_sma$decision.SMA, bbri_ema$decision.EMA, bbri_macd$decision.MACD, bbri_rsi$decision.RSI)
+
+# Mengubah nama kolom
+colnames(bbri_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA5", "SMA30", "SMA50", "SMA70", "EMA5", "EMA15", "EMA50", "EMA70", "MACD", "RSI7", "RSI14", "RSI30", "RSI70", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(bbri_analisa)
+```
+
+Setelah semua kolom analisa tergabung kedalam sebuah data frame baru, buatlah satu buah kolom baru yang akan dimamfaatkan sebagai keputusan akhir. Keputusan akhir yang akan diambil dari kolom `decision` per masing-masing analisa.
+
+```{r}
+bbri_analisa <- bbri_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+bbri_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+Dari hasil diatas dapat diketahui bahwa hanya ada 3 kali dari 4 analisa teknikal menunjukan keputusan yang sama, dari situ dapat disimpulkan bahwa mayoritas hasil dari masing-masing analaisa teknikal memiliki hasil yang berbeda. Salah satu alternatif untuk mendapatkan keputusan akhir dari hasil penggabungan 4 analisa teknikal diatas adalah dengan memberikan bobot kepada analisa teknikal yang lebih bagus dari 4 analisa yang sudah dilakukan. 
+
+Setiap analisa teknikal tentunya memiliki kelebihan dan kekurangannya masing-masing, dalam projek ini ada 2 analisa yang akan diberikan bobot tambahan ke analisa MACD dan RSI. Alasan kenapa memilih MACD adalah keunggulannya dalam memberikan sinyal atau indikasi seawal mungkin, ini sangat bermafaat untuk menghindari kehilangan momentum untuk membeli maupun terlambat untuk mengambil keuntungan. Sedangkan RSI adalah salah satu indikator yang paling favorit dikarenakan kemampuannya untuk mediteksi harga di pasar sedang berada didaerah overbought atau oversell, kemampuan untuk menditeksi itulah yang membuat RSI difavoritkan karena dapat memberikan keuntungan yang maksimal dari hasil analisanya. Diharapkan dengan menggabungkan kedua indikator diatas dapat saling melengkapi satu dengan yang lainnya.
+
+```{r}
+bbri_analisa2 <- bbri_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+
+tail(bbri_analisa2)
+```
+
+<b>Evaluasi analisa teknikal gabungan</b>
+
+```{r}
+bbri_analisa2 %>% 
+  group_by(final_decision) %>% 
+  summarise(freq = n())
+```
+
+Dari hasil diatas diketahui bahwa terdapat total 34 sinyal "Buy", 38 sinyal "Sell" dan 806 sinyal "Hold" dari awal tahun 2018 sampai dengan penghujung bulan Juni 2021. Akan tetapi dari hasil rekomendasi dengan menggunakan metode gabungan, terdapat satu kali kesalahan dalam memberikan usual Buy-Sell. 
+
+```{r}
+bbri_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+Jika diperhatikan satu persatu dari keseluruhan rekomendasi "Buy" maupun "Sell" dari metode SMA yang sudah difilter diatas, hasil rekomendasi mengalami satu kali kesalahan yang memberikan sedikit kerugian dalam trading. Mari coba dikalkukasi berapa total kerugian yang terjadi.
+
+```{r}
+bbri_analisa2 %>% 
+  filter(final_decision != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision")) %>% 
+  slice(2:9)
+```
+
+```{r}
+#Total kerugian dengan indikator gabungan
+evaluasi <- ((3180*100) - (((3640*100) + (3260*100) + (3170*100) + (3150*100) + (3210*100) + (2960*100) + (2900*100))/7))*7
+evaluasi
+```
+
+Dari hasil observasi yang menunjukan indikator Buy-Sell pertama kali dapat dilihat bahwa dari total 7 lot yang dibeli, total kerugian yang didapatkan sebesar Rp. 3.000,00. Kerugian tersebut akan tergantikan pada indikator Buy-Sell yang kedua, marik coba dilihat pada indikator Buy-Sell kedua.
+
+```{r}
+bbri_analisa2 %>% 
+  filter(final_decision != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision")) %>% 
+  slice(10:14)
+```
+
+```{r}
+#Total kerugian dengan indikator gabungan ke-2 
+evaluasi2 <- ((3680*100) - (((3010*100) + (3150*100) + (3070*100) + (3040*100))/4))*4
+evaluasi2
+```
+
+Pada indikator Buy-Sell kedua dengan menggunakan indikator gabungan keuntungan yang didapatkan adalah Rp. 245.000,00 dalam kurun waktu 3 bulan, ini merupakan hasil yang cukup baik karena dari semua analisa yang sudah dilakukan analisa gabunganlah yang menhasilkan keuntungan yang cukup besar dalam waktu yang singkat.
+
+Hal lain yang dapat dilakukan untuk memperbaiki kesalahan indikator Buy-Sell yang pertama adalah mengubah hasil keputusan akhir pada tanggal 13-04-2018 menjadi "Hold".
+
+```{r}
+bbri_analisa2$final_decision[bbri_analisa2$date == "2018-04-13"] <- "Hold"
+
+bbri_analisa2 %>% 
+  filter(date == "2018-04-13") %>% 
+  select(c("date", "open", "close", "final_decision"))
+```
+
+Jika sudah dilakukan coba lakukan evaluasi satu kali lagi pada indikator Buy-Sell yang pertama kali muncul.
+
+```{r}
+bbri_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold") %>% 
+  head(10)
+```
+
+```{r}
+#Total kerugian dengan indikator gabungan ke-1 yang sudah dievaluasi
+evaluasi3 <- ((3180*100) - (((3260*100) + (3170*100) + (3150*100) + (3210*100) + (2960*100) + (2900*100))/6))*6
+evaluasi3
+```
+
+Setelah hasil kolom final_decision pada tanggal 13-4-2018 diganti dari "Sell" menjadi "Hold" keuntungan yang didapatkan menjadi Rp. 43.000,00 dari yang sebelumnya mendapatkan kerugian sebesar Rp. 3.000,00.

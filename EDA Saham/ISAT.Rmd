@@ -1,0 +1,459 @@
+---
+title: "Untitled"
+author: "Victor Nugraha"
+date: "7/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Preparation
+
+## Library Setup
+
+```{r, message=FALSE, warning=FALSE}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+## Data Collection
+
+<b>Sektor Telekomunikasi: TLKM</b>
+
+```{r}
+isat <- tq_get(x = "ISAT.JK",
+               get = "stock.prices",
+               from = " 2018-01-01")
+
+head(isat)
+```
+
+```{r}
+#Cek missing value
+colSums(is.na(isat))
+```
+
+```{r}
+#Menghilangkan missng value
+isat <- isat %>% 
+  drop_na()
+
+colSums(is.na(isat))
+```
+
+```{r}
+#Cek tipe data
+glimpse(isat)
+```
+
+# EDA
+
+## Chart
+
+### Basic Chart: Line chart
+
+```{r}
+isat_mutate <- isat %>% 
+  mutate(label = glue(
+    "
+    Date: {date}
+    Price: {close}
+    "
+  ))
+
+#Membuat line plot
+isat_plot <- ggplot(data = isat_mutate,
+  mapping = aes(
+    x = date,
+    y = close,
+    text = label,
+    group = 1
+  )) +
+  geom_line(color = "black") +
+  labs(title = "ISAT",
+       subtitle = "",
+       x = "Date",
+       y = "Price (Rp)") +
+  theme_classic()
+
+#Megubah dari plot biasa menjadi plotly agar lebih informatif
+isat_plotly <- ggplotly(isat_plot, tooltip = "label")
+isat_plotly
+```
+
+### Advance Chart: Candlestick + Bar Chart
+
+```{r}
+#Membuat candlestick plot 
+isat_ploty2 <- isat %>%
+  plot_ly(x = ~date,
+          type = "candlestick", 
+          open = ~open, 
+          close = ~close, 
+          high = ~high,
+          low = ~low,
+          name = "Price (Rp)") %>%
+  layout(
+    xaxis = list(
+      rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 Day",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 5,
+            label = "5 Days",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Month",
+            step = "week",
+            stepmode = "backward"),
+          list(
+            count = 3,
+            label = "3 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 6,
+            label = "6 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Year",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 2,
+            label = "2 Years",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            label = "Max",
+            step = "all"))),
+      rangeslider = list(visible = FALSE)),
+         yaxis = list(title = "Price (Rp)",
+                      showgrid = TRUE,
+                      showticklabels = TRUE))
+
+#Membuat bar plot untuk volume saham BRI
+isat_ploty3 <- isat %>%
+  plot_ly(x=~date, 
+          y=~volume, 
+          type='bar', 
+          name = "Volume") %>%
+  layout(yaxis = list(title = "Volume"))
+
+#Menggabungkan 2 plot menjadi 1 plot
+isat_fig <- subplot(isat_ploty2, isat_ploty3, heights = c(0.7,0.2), nrows=2,
+             shareX = TRUE, titleY = TRUE)
+isat_fig
+```
+
+## Analisa Teknikal
+
+### SMA
+
+```{r}
+#Membuat object baru
+isat_sma <- isat
+
+# SMA 5
+isat_sma$SMA5 <- SMA(Ad(isat_sma),
+                n = 5)
+
+# SMA 30
+isat_sma$SMA20 <- SMA(Ad(isat_sma),
+                n = 20)
+
+# SMA 50
+isat_sma$SMA60 <- SMA(Ad(isat_sma),
+                      n = 60)
+
+# SMA 70
+isat_sma$SMA70 <- SMA(Ad(isat_sma),
+                n =70)
+```
+
+
+```{r}
+# Membuat sinyal Buy, Sell & Hold
+isat_sma <- isat_sma %>%
+  mutate(
+    signal.SMA = case_when(
+      adjusted < lag(SMA5, 1) & SMA20 > lag(SMA60, 1) ~ "Sell",
+      adjusted > lag(SMA60, 1) & SMA20 < lag(SMA60, 1) ~ "Buy",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+```
+
+
+```{r}
+isat_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA60))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+isat_sma %>% 
+  group_by(decision.SMA) %>% 
+  filter(! is.na(SMA60)) %>% 
+  summarise(freq = n())
+```
+
+### EMA
+
+```{r}
+# Membuat objek baru 
+isat_ema <- isat
+
+# EMA 10
+isat_ema$EMA10 <- EMA(Ad(isat_ema),
+                n = 10)
+
+# EMA 30
+isat_ema$EMA30 <- EMA(Ad(isat_ema),
+                n = 30)
+
+# EMA 50
+isat_ema$EMA50 <- EMA(Ad(isat_ema),
+                n = 50)
+
+# EMA 70
+isat_ema$EMA70 <- EMA(Ad(isat_ema),
+                n = 70)
+```
+
+```{r}
+isat_ema <- isat_ema %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA10, 1) & EMA30 > lag(EMA50, 1) ~ "Sell",
+      adjusted > lag(EMA70, 1) & EMA30 < lag(EMA50, 1) ~ "Buy",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+```
+
+
+```{r}
+isat_ema %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA70))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+isat_ema %>% 
+  group_by(decision.EMA) %>% 
+  filter(! is.na(EMA70)) %>% 
+  summarise(freq = n())
+```
+
+### MACD
+
+```{r}
+# Membuat objek baru
+isat_macd <- isat
+
+# EMA 10
+isat_macd$EMA10 <- EMA(Ad(isat_ema),
+                n = 10)
+
+# EMA 18
+isat_macd$EMA18 <- EMA(Ad(isat_ema),
+                n = 18)
+
+# EMA 48
+isat_macd$EMA48 <- EMA(Ad(isat_ema),
+                n = 48)
+
+# MACD
+isat_macd$MACD <- isat_macd$EMA18 - isat_macd$EMA48
+```
+
+
+```{r}
+isat_macd <- isat_macd %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(isat_macd$EMA10, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(isat_macd$EMA10, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+```
+
+```{r}
+isat_macd %>% 
+  filter(decision.MACD != "Hold")
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+isat_macd %>% 
+  group_by(decision.MACD) %>% 
+  summarise(freq = n())
+```
+
+### RSI
+
+```{r}
+# Membuat objek baru
+isat_rsi <- isat
+
+# RSI 10
+isat_rsi$RSI10 <- RSI(Ad(isat_rsi),
+                     n =10)
+
+# RSI 38
+isat_rsi$RSI38 <- RSI(Ad(isat_rsi), 
+                      n=38)
+
+# RSI 45
+isat_rsi$RSI45 <- RSI(Ad(isat_rsi), 
+                      n=45)
+
+# RSI 70
+isat_rsi$RSI70 <- RSI(Ad(isat_rsi), 
+                      n=70)
+```
+
+```{r}
+isat_rsi <- isat_rsi %>% 
+  mutate(
+    signal.RSI = case_when(
+      adjusted < lag(adjusted,1) & RSI10 > RSI38 & RSI10 < RSI70 ~ "Buy",
+      adjusted > lag(adjusted,1) & RSI10 < RSI38 & RSI10 > RSI45 ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+```
+
+```{r}
+isat_rsi %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI70))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+isat_rsi %>% 
+  group_by(decision.RSI) %>% 
+  summarise(freq = n())
+```
+
+### Analisa Gabungan
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+isat_analisa <- cbind(isat,isat_sma$SMA5, isat_sma$SMA20, isat_sma$SMA60, isat_sma$SMA70, isat_ema$EMA10, isat_ema$EMA30, isat_ema$EMA50, isat_ema$EMA70, isat_macd$EMA10, isat_macd$EMA18, isat_macd$EMA48, isat_macd$MACD, isat_rsi$RSI10, isat_rsi$RSI38, isat_rsi$RSI45, bbri_rsi$RSI70, bbri_sma$decision.SMA, bbri_ema$decision.EMA, bbri_macd$decision.MACD, bbri_rsi$decision.RSI)
+
+# Mengubah nama kolom
+colnames(isat_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA5", "SMA20", "SMA60", "SMA70", "EMA5", "EMA10", "EMA30", "EMA50", "EMA70", "EMA18", "EMA48", "MACD", "RSI10", "RSI38", "RSI45", "RSI70", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(isat_analisa)
+```
+
+Setelah semua kolom analisa tergabung kedalam sebuah data frame baru, buatlah satu buah kolom baru yang akan dimamfaatkan sebagai keputusan akhir. Keputusan akhir yang akan diambil dari kolom `decision` per masing-masing analisa.
+
+```{r}
+isat_analisa <- isat_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+isat_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+isat_analisa2 <- isat_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.EMA == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.EMA == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.EMA == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.EMA == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.EMA == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.EMA == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.EMA == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.EMA == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.EMA == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.EMA == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+isat_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
