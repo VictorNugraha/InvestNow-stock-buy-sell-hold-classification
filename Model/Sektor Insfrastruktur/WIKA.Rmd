@@ -1,0 +1,590 @@
+---
+title: "Untitled"
+author: "Victor Nugraha"
+date: "7/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Preparation
+
+## Library Setup
+
+```{r, message=FALSE, warning=FALSE}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+## Data Collection
+
+<b>Sektor Telekomunikasi: TLKM</b>
+
+```{r}
+wika <- tq_get(x = "WIKA.JK",
+               get = "stock.prices",
+               from = " 2018-01-01")
+
+head(wika)
+```
+
+```{r}
+#Cek missing value
+colSums(is.na(wika))
+```
+
+```{r}
+#Menghilangkan missng value
+wika <- wika %>% 
+  drop_na()
+
+colSums(is.na(wika))
+```
+
+
+```{r}
+#Cek tipe data
+glimpse(wika)
+```
+
+# EDA
+
+## Chart
+
+### Basic Chart: Line chart
+
+```{r}
+wika_mutate <- wika %>% 
+  mutate(label = glue(
+    "
+    Date: {date}
+    Price: {close}
+    "
+  ))
+
+#Membuat line plot
+wika_plot <- ggplot(data = wika_mutate,
+  mapping = aes(
+    x = date,
+    y = close,
+    text = label,
+    group = 1
+  )) +
+  geom_line(color = "black") +
+  labs(title = "WIKA",
+       subtitle = "",
+       x = "Date",
+       y = "Price (Rp)") +
+  theme_classic()
+
+#Megubah dari plot biasa menjadi plotly agar lebih informatif
+wika_plotly <- ggplotly(wika_plot, tooltip = "label")
+wika_plotly
+```
+
+### Advance Chart: Candlestick + Bar Chart
+
+```{r}
+#Membuat candlestick plot 
+wika_ploty2 <- wika %>%
+  plot_ly(x = ~date,
+          type = "candlestick", 
+          open = ~open, 
+          close = ~close, 
+          high = ~high,
+          low = ~low,
+          name = "Price (Rp)") %>%
+  layout(
+    xaxis = list(
+      rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 Day",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 5,
+            label = "5 Days",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Month",
+            step = "week",
+            stepmode = "backward"),
+          list(
+            count = 3,
+            label = "3 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 6,
+            label = "6 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Year",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 2,
+            label = "2 Years",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            label = "Max",
+            step = "all"))),
+      rangeslider = list(visible = FALSE)),
+         yaxis = list(title = "Price (Rp)",
+                      showgrid = TRUE,
+                      showticklabels = TRUE))
+
+#Membuat bar plot untuk volume saham BRI
+wika_ploty3 <- wika %>%
+  plot_ly(x=~date, 
+          y=~volume, 
+          type='bar', 
+          name = "Volume") %>%
+  layout(yaxis = list(title = "Volume"))
+
+#Menggabungkan 2 plot menjadi 1 plot
+wika_fig <- subplot(wika_ploty2, wika_ploty3, heights = c(0.7,0.2), nrows=2,
+             shareX = TRUE, titleY = TRUE)
+wika_fig
+```
+
+## Analisa Teknikal
+
+### SMA
+
+```{r}
+#Membuat object baru
+wika_sma <- wika
+
+# SMA 5
+wika_sma$SMA20 <- SMA(Ad(wika_sma),
+                n = 20)
+  
+# SMA 30
+wika_sma$SMA30 <- SMA(Ad(wika_sma),
+                n = 30)
+
+# SMA 65
+wika_sma$SMA65 <- SMA(Ad(wika_sma),
+                      n =65)
+
+# SMA 80
+wika_sma$SMA80 <- SMA(Ad(wika_sma),
+                n =80)
+```
+
+```{r}
+# Membuat sinyal Buy, Sell & Hold
+wika_sma <- wika_sma %>%
+  mutate(
+    signal.SMA = case_when(
+      close < lag(SMA20, 1) & SMA30 < lag(SMA65, 1) ~ "Buy",
+      close > lag(SMA80, 1) & SMA30 > lag(SMA65, 1) ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+```
+
+```{r}
+wika_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA80))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+wika_sma %>% 
+  group_by(decision.SMA) %>% 
+  filter(! is.na(SMA80)) %>% 
+  summarise(freq = n())
+```
+
+### EMA
+
+```{r}
+# Membuat objek baru 
+wika_ema <- wika
+
+# EMA 20
+wika_ema$EMA20 <- EMA(Ad(wika_ema),
+                n = 20)
+
+# EMA 30
+wika_ema$EMA30 <- EMA(Ad(wika_ema),
+                n = 30)
+
+# EMA 65
+wika_ema$EMA65 <- EMA(Ad(wika_ema),
+                n = 65)
+
+# EMA 80
+wika_ema$EMA80 <- EMA(Ad(wika_ema),
+                n = 80)
+```
+
+```{r}
+wika_ema <- wika_ema %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA20, 1) & EMA30 < lag(EMA65, 1) ~ "Buy",
+      adjusted > lag(EMA80, 1) & EMA30 > lag(EMA65, 1) ~ "Sell",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+```
+
+
+```{r}
+wika_ema %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA80))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+wika_ema %>% 
+  group_by(decision.EMA) %>% 
+  filter(! is.na(EMA80)) %>% 
+  summarise(freq = n())
+```
+
+```{r}
+wika_ema$decision.EMA[wika_ema$date == "2020-01-29"] <- "Hold"
+wika_ema$decision.EMA[wika_ema$date == "2020-02-07"] <- "Hold"
+wika_ema$decision.EMA[wika_ema$date == "2020-02-24"] <- "Hold"
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+wika_ema %>% 
+  group_by(decision.EMA) %>% 
+  filter(! is.na(EMA80)) %>% 
+  summarise(freq = n())
+```
+
+### MACD
+
+```{r}
+# Membuat objek baru
+wika_macd <- wika
+
+# EMA 6
+wika_macd$EMA6 <- EMA(Ad(wika_macd),
+                n =6)
+
+# EMA 10
+wika_macd$EMA10 <- EMA(Ad(wika_macd),
+                n = 10)
+
+# EMA 25
+wika_macd$EMA25 <- EMA(Ad(wika_macd),
+                n = 25)
+
+# MACD
+wika_macd$MACD <- wika_macd$EMA10 - wika_macd$EMA25
+```
+
+
+```{r}
+wika_macd <- wika_macd %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(wika_macd$EMA10, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(wika_macd$EMA10, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+```
+
+```{r}
+wika_macd %>% 
+  filter(decision.MACD != "Hold")
+```
+
+```{r}
+wika_macd$decision.MACD[wika_macd$date == "2019-12-26"] <- "Hold"
+```
+
+```{r}
+wika_macd %>% 
+  filter(decision.MACD != "Hold")
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+wika_macd %>% 
+  group_by(decision.MACD) %>% 
+  summarise(freq = n())
+```
+
+### RSI
+
+```{r}
+# Membuat objek baru
+wika_rsi <- wika
+
+# RSI 10
+wika_rsi$RSI5 <- RSI(Ad(wika_rsi),
+                     n =5)
+
+# RSI 14
+wika_rsi$RSI20 <- RSI(Ad(wika_rsi), 
+                      n=20)
+
+# RSI 30
+wika_rsi$RSI35 <- RSI(Ad(wika_rsi), 
+                      n=35)
+
+# RSI 65
+wika_rsi$RSI65 <- RSI(Ad(wika_rsi), 
+                      n=65)
+```
+
+```{r}
+wika_rsi <- wika_rsi %>% 
+  mutate(
+    signal.RSI = case_when(
+      close < lag(close,1) & RSI5 > RSI20 & RSI5 < RSI65 ~ "Buy",
+      close > lag(close,1) & RSI5 < RSI20 & RSI5 > RSI35 ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+```
+
+```{r}
+wika_rsi %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI65))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+wika_rsi %>% 
+  group_by(decision.RSI) %>% 
+  summarise(freq = n())
+```
+
+### Analisa Gabungan
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+wika_analisa <- cbind(wika, wika_sma$SMA20, wika_sma$SMA30, wika_sma$SMA65, wika_sma$SMA80, wika_ema$EMA20, wika_ema$EMA30, wika_ema$EMA65, wika_ema$EMA80, wika_macd$EMA10, wika_macd$EMA25, wika_macd$MACD, wika_rsi$RSI5, wika_rsi$RSI20, wika_rsi$RSI35, wika_rsi$RSI65, wika_sma$decision.SMA, wika_ema$decision.EMA, wika_macd$decision.MACD, wika_rsi$decision.RSI)
+
+# Mengubah nama kolom
+colnames(wika_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA20", "SMA30", "SMA65", "SMA80", "EMA20", "EMA30", "EMA65", "EMA80", "EMA10", "EMA25", "MACD", "RSI5", "RSI20", "RSI35", "RSI65", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(wika_analisa)
+```
+
+
+```{r}
+wika_analisa <- wika_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+wika_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+wika_analisa2 <- wika_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+wika_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+wika_analisa2$final_decision[wika_analisa2$date == "2019-08-08"] <- "Hold"
+```
+
+```{r}
+wika_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+# Cross Validation
+
+```{r}
+wika_cv <- wika_analisa2[81:883,] %>%
+  mutate_if(is.character, as.factor)
+  
+glimpse(wika_cv)
+```
+
+```{r, message=FALSE, warning=FALSE}
+RNGkind(sample.kind = "Rounding") 
+set.seed(123)
+
+init <- initial_split(data = wika_cv,
+                      prop = 0.65, 
+                      strata = final_decision) 
+
+wika_train <- training(init)
+wika_test <- testing(init)
+```
+
+```{r}
+prop.table(table(wika_train$final_decision))
+table(wika_train$final_decision)
+```
+
+## SMOTE
+
+```{r}
+dat <- wika_train[, c(3:28)]
+
+table(dat$final_decision)
+```
+
+```{r}
+set.seed(123)
+wika_train_smote <- SmoteClassif(final_decision ~ ., dat, C.perc = list(Buy = 12, Hold = 1, Sell = 18), dist = "HVDM")
+
+prop.table(table(wika_train_smote$final_decision))
+table(wika_train_smote$final_decision)
+```
+
+# Modeling
+
+## DT
+
+```{r, fig.dim = c(50 , 50)}
+model_dt <- ctree(final_decision ~ ., data = wika_train_smote)
+plot(model_dt, type = "simple")
+```
+
+```{r}
+pred_model_dt <- predict(object = model_dt, newdata = wika_test, type = "response")
+
+head(pred_model_dt)
+```
+
+```{r}
+eval_pred_model_dt <- confusionMatrix(pred_model_dt,
+                reference = as.factor(wika_test$final_decision))
+
+table(wika_test$final_decision)
+eval_pred_model_dt 
+```
+
+## Random Forest
+
+```{r}
+# set.seed(100)
+# 
+# ctrl <- trainControl(method = "repeatedcv",
+#                       number = 10, # k-fold
+#                       repeats = 5) #repetition
+# 
+# wika_forest <- train(final_decision ~ .,
+#                     data = wika_train_smote,
+#                     method = "rf", # random forest
+#                     trControl = ctrl)
+# 
+# saveRDS(wika_forest, "wika_forest.RDS")
+
+wika_forest <- readRDS("wika_forest.RDS")
+wika_forest
+```
+
+```{r}
+rm_pred <- predict(wika_forest, wika_test, type = "raw")
+head(rm_pred)
+```
+
+```{r}
+eval_rf <- confusionMatrix(data = rm_pred,
+                reference = wika_test$final_decision)
+
+table(wika_test$final_decision)
+eval_rf
+```
+
+
+
