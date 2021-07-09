@@ -1,7 +1,7 @@
 # stock-buy-hold-sell-classification
 This is my project for Data Career Day at Algoritma School of Data Sciece.
 
-Rpubs link for readme: https://rpubs.com/VicNP/proposal-dcd
+Rpubs link for readme Bahasa Indonesia: https://rpubs.com/VicNP/proposal-dcd
 
 # Background
 
