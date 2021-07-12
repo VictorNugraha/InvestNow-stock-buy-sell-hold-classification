@@ -1,10 +1,13 @@
 #------------------------------LIBRARY-----------------------------------------
 # shiny
+library(dashboardthemes)
 library(shinydashboard)
 library(shinycssloaders)
 library(shiny)
 library(bslib)
 library(slickR)
+library(rintrojs)
+library(shinyBS)
 
 # data wrangling (data pre-processing + eda)
 library(tidyverse)
@@ -42,8 +45,12 @@ library(stats)
 #------------------------------DATA COLLECTION---------------------------------
 
 ##SEKTOR BANK - BBRI
+bbri <- tq_get(x = "BBRI.JK", 
+               get = "stock.prices", 
+               from = " 2018-01-01") 
 
-
+bbri <- bbri %>% 
+  drop_na()
 
 
 
