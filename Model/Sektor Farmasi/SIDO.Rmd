@@ -1,0 +1,749 @@
+---
+title: "Untitled"
+author: "Victor Nugraha"
+date: "7/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Preparation
+
+## Library Setup
+
+```{r, message=FALSE, warning=FALSE}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+## Data Collection
+
+<b>Sektor Telekomunikasi: TLKM</b>
+
+```{r}
+sido <- tq_get(x = "SIDO.JK",
+               get = "stock.prices",
+               from = " 2018-01-01")
+
+head(sido)
+```
+
+```{r}
+#Cek missing value
+colSums(is.na(sido))
+```
+
+```{r}
+#Cek tipe data
+glimpse(sido)
+```
+
+# EDA
+
+## Chart
+
+### Basic Chart: Line chart
+
+```{r}
+sido_mutate <- sido %>% 
+  mutate(label = glue(
+    "
+    Date: {date}
+    Price: {close}
+    "
+  ))
+
+#Membuat line plot
+sido_plot <- ggplot(data = sido_mutate,
+  mapping = aes(
+    x = date,
+    y = close,
+    text = label,
+    group = 1
+  )) +
+  geom_line(color = "black") +
+  labs(title = "SIDO",
+       subtitle = "",
+       x = "Date",
+       y = "Price (Rp)") +
+  theme_classic()
+
+#Megubah dari plot biasa menjadi plotly agar lebih informatif
+sido_plotly <- ggplotly(sido_plot, tooltip = "label")
+sido_plotly
+```
+
+### Advance Chart: Candlestick + Bar Chart
+
+```{r}
+#Membuat candlestick plot 
+sido_ploty2 <- sido %>%
+  plot_ly(x = ~date,
+          type = "candlestick", 
+          open = ~open, 
+          close = ~close, 
+          high = ~high,
+          low = ~low,
+          name = "Price (Rp)") %>%
+  layout(
+    xaxis = list(
+      rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 Day",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 5,
+            label = "5 Days",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Month",
+            step = "week",
+            stepmode = "backward"),
+          list(
+            count = 3,
+            label = "3 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 6,
+            label = "6 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Year",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 2,
+            label = "2 Years",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            label = "Max",
+            step = "all"))),
+      rangeslider = list(visible = FALSE)),
+         yaxis = list(title = "Price (Rp)",
+                      showgrid = TRUE,
+                      showticklabels = TRUE))
+
+#Membuat bar plot untuk volume saham BRI
+sido_ploty3 <- sido %>%
+  plot_ly(x=~date, 
+          y=~volume, 
+          type='bar', 
+          name = "Volume") %>%
+  layout(yaxis = list(title = "Volume"))
+
+#Menggabungkan 2 plot menjadi 1 plot
+sido_fig <- subplot(sido_ploty2, sido_ploty3, heights = c(0.7,0.2), nrows=2,
+             shareX = TRUE, titleY = TRUE)
+sido_fig
+```
+
+## Analisa Teknikal
+
+### SMA
+
+```{r}
+#Membuat object baru
+sido_sma <- sido
+
+# SMA 5
+sido_sma$SMA5 <- SMA(Ad(sido_sma),
+                n = 5)
+  
+# SMA 15
+sido_sma$SMA15 <- SMA(Ad(sido_sma),
+                n = 15)
+
+# SMA 55
+sido_sma$SMA55 <- SMA(Ad(sido_sma),
+                      n = 55)
+
+# SMA 80
+sido_sma$SMA80 <- SMA(Ad(sido_sma),
+                n =80)
+```
+
+
+```{r}
+# Membuat sinyal Buy, Sell & Hold
+sido_sma <- sido_sma %>%
+  mutate(
+    signal.SMA = case_when(
+      adjusted < lag(SMA5, 1) & SMA15 < lag(SMA55, 1) ~ "Buy",
+      adjusted > lag(SMA80, 1) & SMA15 > lag(SMA55, 1) ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+```
+
+```{r}
+sido_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA80))
+```
+
+```{r}
+sido_sma$decision.SMA[sido_sma$date == "2020-04-20"] <- "Hold"
+sido_sma$decision.SMA[sido_sma$date == "2020-04-23"] <- "Hold"
+```
+
+
+```{r}
+sido_sma %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA80))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+sido_sma %>% 
+  group_by(decision.SMA) %>% 
+  filter(! is.na(SMA80)) %>% 
+  summarise(freq = n())
+```
+
+### EMA
+
+```{r}
+# Membuat objek baru 
+sido_ema <- sido
+
+# EMA 5
+sido_ema$EMA5 <- EMA(Ad(sido_ema),
+                n = 5)
+
+# EMA 30
+sido_ema$EMA30 <- EMA(Ad(sido_ema),
+                n = 30)
+
+# EMA 55
+sido_ema$EMA55 <- EMA(Ad(sido_ema),
+                n = 55)
+
+# EMA 60
+sido_ema$EMA60 <- EMA(Ad(sido_ema),
+                n = 60)
+```
+
+```{r}
+sido_ema <- sido_ema %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA5, 1) & EMA30 < lag(EMA55, 1) ~ "Buy",
+      adjusted > lag(EMA60, 1) & EMA30 > lag(EMA55, 1) ~ "Sell",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+```
+
+
+```{r}
+sido_ema %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA60))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+sido_ema %>% 
+  group_by(decision.EMA) %>% 
+  filter(! is.na(EMA60)) %>% 
+  summarise(freq = n())
+```
+
+### MACD
+
+```{r}
+# Membuat objek baru
+sido_macd <- sido
+
+# EMA 10
+sido_macd$EMA10 <- EMA(Ad(sido_macd),
+                n = 10)
+
+# EMA 15
+sido_macd$EMA15 <- EMA(Ad(sido_macd),
+                n = 15)
+
+# EMA 20
+sido_macd$EMA20 <- EMA(Ad(sido_macd),
+                n = 20)
+
+# MACD
+sido_macd$MACD <- sido_macd$EMA15 - sido_macd$EMA20
+```
+
+
+```{r}
+sido_macd <- sido_macd %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(sido_macd$EMA10, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(sido_macd$EMA10, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+```
+
+```{r}
+sido_macd %>% 
+  filter(decision.MACD != "Hold")
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+sido_macd %>% 
+  group_by(decision.MACD) %>% 
+  summarise(freq = n())
+```
+
+### RSI
+
+```{r}
+# Membuat objek baru
+sido_rsi <- sido
+
+# RSI 10
+sido_rsi$RSI10 <- RSI(Ad(sido_rsi),
+                     n =10)
+
+# RSI 14
+sido_rsi$RSI14 <- RSI(Ad(sido_rsi), 
+                      n=14)
+
+# RSI 30
+sido_rsi$RSI30 <- RSI(Ad(sido_rsi), 
+                      n=30)
+
+# RSI 65
+sido_rsi$RSI65 <- RSI(Ad(sido_rsi), 
+                      n=65)
+```
+
+```{r}
+sido_rsi <- sido_rsi %>% 
+  mutate(
+    signal.RSI = case_when(
+      close < lag(close,1) & RSI10 > RSI14 & RSI10 < RSI65 ~ "Sell",
+      close > lag(close,1) & RSI10 < RSI14 & RSI10 > RSI30 ~ "Buy",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+```
+
+```{r}
+sido_rsi %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI65))
+```
+
+```{r}
+#Mengecek jumlah sinyal buy, sell dan hold
+sido_rsi %>% 
+  group_by(decision.RSI) %>% 
+  summarise(freq = n())
+```
+
+### Analisa Gabungan
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+sido_analisa <- cbind(sido, sido_sma$SMA5, sido_sma$SMA15, sido_sma$SMA55, sido_sma$SMA80, sido_ema$EMA5, sido_ema$EMA30, sido_ema$EMA55, sido_ema$EMA60, sido_macd$EMA10, sido_macd$EMA15, sido_macd$MACD, sido_rsi$RSI10, sido_rsi$RSI14, sido_rsi$RSI30, sido_rsi$RSI65, sido_sma$decision.SMA, sido_ema$decision.EMA, sido_macd$decision.MACD, sido_rsi$decision.RSI)
+
+# Mengubah nama kolom
+colnames(sido_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA5", "SMA15", "SMA55", "SMA80", "EMA5", "EMA30", "EMA55", "EMA60", "EMA10", "EMA15", "MACD", "RSI10", "RSI14", "RSI40", "RSI65", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(sido_analisa)
+```
+
+
+```{r}
+sido_analisa <- sido_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+sido_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+sido_analisa2 <- sido_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+```{r}
+sido_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+sido_analisa2$final_decision[sido_analisa2$date == "2019-01-16"] <- "Hold"
+```
+
+```{r}
+sido_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+sido_analisa2$final_decision[sido_analisa2$date == "2018-11-14"] <- "Hold"
+sido_analisa2$final_decision[sido_analisa2$date == "2019-03-05"] <- "Hold"
+sido_analisa2$final_decision[sido_analisa2$date == "2020-07-24"] <- "Hold"
+```
+
+```{r}
+sido_backtest <- sido_analisa2 %>% 
+  filter(final_decision != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision")) %>% 
+  mutate(
+    stock_buy = case_when(
+      final_decision == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+sido_backtest <- sido_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_backtest <- sido_backtest %>% 
+  mutate(
+    stock_sell = ifelse(final_decision == "Sell", lag(total_stock),0)
+    )
+
+sido_backtest <- sido_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(final_decision == "Buy", open*100,0)
+    )
+
+sido_backtest <- sido_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_backtest <- sido_backtest %>% 
+  mutate(
+    avg_price = ifelse(final_decision == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+sido_backtest <- sido_backtest %>% 
+  mutate(
+    profit = ifelse(final_decision == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+sido_backtest
+
+sido_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
+
+
+```{r}
+sido_analisa2 %>% 
+  group_by(final_decision) %>% 
+  summarise(freq = n())
+```
+
+# Cross Validation
+
+```{r}
+sido_cv <- sido_analisa2[81:883,] %>%
+  mutate_if(is.character, as.factor)
+  
+glimpse(sido_cv)
+```
+
+```{r, message=FALSE, warning=FALSE}
+RNGkind(sample.kind = "Rounding") 
+set.seed(123)
+
+init <- initial_split(data = sido_cv,
+                      prop = 0.65, 
+                      strata = final_decision) 
+
+sido_train <- training(init)
+sido_test <- testing(init)
+```
+
+```{r}
+prop.table(table(sido_train$final_decision))
+table(sido_train$final_decision)
+```
+
+## SMOTE
+
+```{r}
+dat <- sido_train[, c(3:28)]
+
+table(dat$final_decision)
+```
+
+```{r}
+set.seed(123)
+sido_train_smote <- SmoteClassif(final_decision ~ ., dat, C.perc = list(Buy = 13, Hold = 1, Sell = 23), dist = "HVDM")
+
+prop.table(table(sido_train_smote$final_decision))
+table(sido_train_smote$final_decision)
+```
+
+# Modeling
+
+## DT
+
+```{r, fig.dim = c(50 , 50)}
+model_dt <- ctree(final_decision ~ ., data = sido_train_smote)
+plot(model_dt, type = "simple")
+```
+
+```{r}
+pred_model_dt <- predict(object = model_dt, newdata = sido_test, type = "response")
+
+head(pred_model_dt)
+```
+
+```{r}
+eval_pred_model_dt <- confusionMatrix(pred_model_dt,
+                reference = as.factor(sido_test$final_decision))
+
+table(sido_test$final_decision)
+eval_pred_model_dt 
+```
+
+
+```{r}
+sido_test$pred_dt <- pred_model_dt
+
+head(sido_test)
+```
+
+```{r}
+sido_dt_backtest <- sido_test %>% 
+  filter(pred_dt != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_dt")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_dt == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
+    )
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
+    )
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+sido_dt_backtest <- sido_dt_backtest %>% 
+  mutate(
+    profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+sido_dt_backtest
+
+sido_dt_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
+
+## Random Forest
+
+```{r}
+# set.seed(100)
+# 
+# ctrl <- trainControl(method = "repeatedcv",
+#                       number = 10, # k-fold
+#                       repeats = 5) #repetition
+# 
+# sido_forest <- train(final_decision ~ .,
+#                     data = sido_train_smote,
+#                     method = "rf", # random forest
+#                     trControl = ctrl)
+# 
+# saveRDS(sido_forest, "sido_forest.RDS")
+
+sido_forest <- readRDS("sido_forest.RDS")
+sido_forest
+```
+
+```{r}
+rm_pred <- predict(sido_forest, sido_test, type = "raw")
+head(rm_pred)
+```
+
+```{r}
+eval_rf <- confusionMatrix(data = rm_pred,
+                reference = sido_test$final_decision)
+
+table(sido_test$final_decision)
+eval_rf
+```
+
+```{r}
+sido_test$pred_rf <- rm_pred
+
+sido_test
+```
+
+```{r}
+sido_rf_backtest <- sido_test %>% 
+  filter(pred_rf != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_rf")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_rf == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_rf == "Sell", lag(total_stock),0)
+    )
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_rf == "Buy", open*100,0)
+    )
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_rf == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+sido_rf_backtest <- sido_rf_backtest %>% 
+  mutate(
+    profit = ifelse(pred_rf == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+sido_rf_backtest
+
+sido_rf_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
