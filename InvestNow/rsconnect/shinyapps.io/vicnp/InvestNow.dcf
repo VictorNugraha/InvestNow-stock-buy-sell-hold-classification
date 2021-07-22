@@ -5,9 +5,9 @@ account: vicnp
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4375737
-bundleId: 4809864
+bundleId: 4815327
 url: https://vicnp.shinyapps.io/InvestNow/
-when: 1626063761.86014
+when: 1626187220.4195
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: html/footer.Rhtml

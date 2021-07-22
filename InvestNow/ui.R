@@ -204,48 +204,61 @@ navbarPage(
 #------------------------------
 #NAV BAR TAB PANEL PORTOFOLIO---
            
-           # Tab Panel Portfolio - Trading Assistance--- 
-           navbarMenu("Portfolio",  
-             tabPanel(title = "Trading Assistance",
-                      value = "trading",
-                      fluidRow(
-                        column(
-                          width = 12,
-                          introBox(
-                            bsButton("bbri",
-                                     label = "BBRI.JK",
-                                     size = "large",
-                                     icon = icon("bank"), 
-                                     style = "success"),
-                            bsButton("indosat", 
-                                     label = "ISAT.JK", 
-                                     size = "large",
-                                     icon = icon("phone"), 
-                                     style = "success"),
-                            bsButton("sido", 
-                                     label = "SIDO.JK", 
-                                     size = "large",
-                                     icon = icon("flask", class = "flask-box"), 
-                                     style = "success"),
-                            bsButton("hoki", 
-                                     label = "HOKI.JK", 
-                                     size = "large",
-                                     icon = icon("shopping-cart"), 
-                                     style = "success"),
-                            bsButton("wika", 
-                                     label = "WIKA.JK", 
-                                     size = "large",
-                                     icon = icon("road"), 
-                                     style = "success")
+             # Tab Panel Portfolio - Trading Assistance--- 
+              navbarMenu("Portfolio",
+                tabPanel(title = "Trading Assitance",
+                         value = 'trading',
+                         fluidRow(
+                           useShinyjs(),
+                           column(width = 12,
+                           actionButton(inputId = 'bbri.jk',
+                                        icon = icon("bank"),
+                                        label = strong('BBRI'),
+                                        style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                           actionButton(inputId = 'isat.jk',
+                                        icon("phone"),
+                                        label = strong('ISAT'),
+                                        style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                           actionButton(inputId = 'sidomuncul',
+                                        icon = icon("flask", class = "flask-box"),
+                                        label = strong('SIDO'),
+                                        style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                           actionButton(inputId = 'hokiberas',
+                                        icon = icon("shopping-cart"),
+                                        label = strong('HOKI'),
+                                        style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                           actionButton(inputId = 'wijayakarya',
+                                        icon = icon("road"),
+                                        label = strong('WIKA'),
+                                        style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                           align = "center",
+                           style = "margin-bottom: 10px;",
+                           style = "margin-top: -10px;",
+                           hr(),
                             ),
-                          br(),
-                          ),
-                        
-                        column(width = 9,
-                               withSpinner(plotlyOutput("bri"), type = 8,size = 0.5)
-                          )
-                        )
-                      ),
+
+                           fluidPage(
+                             fluidRow(
+                             column(
+                                 width = 8,
+                                 uiOutput("plot_output")),
+                             column(
+                               width = 4,
+                              uiOutput("suggestion"))
+                              )
+                             )
+                           )
+                         ),
 
            # Tab Panel Portfolio - G/L Simulator---     
            tabPanel(title = "G/L Simulator",
