@@ -1,0 +1,464 @@
+---
+title: "Untitled"
+author: "Victor Nugraha"
+date: "7/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+
+
+```{r}
+wika_validasi <- tq_get(x = "WIKA.JK", #Nama saham 
+                        get = "stock.prices", #"stock.prices" berarti mengambil dari Yahoo Finance
+                        from = " 2016-01-01",
+                        to = "2017-12-31")
+
+head(wika_validasi)
+```
+
+```{r}
+colSums(is.na(wika_validasi))
+```
+
+```{r}
+wika_sma2 <- wika_validasi
+
+# SMA 5
+wika_sma2$SMA20 <- SMA(Ad(wika_sma2),
+                n = 20)
+  
+# SMA 30
+wika_sma2$SMA30 <- SMA(Ad(wika_sma2),
+                n = 30)
+
+# SMA 65
+wika_sma2$SMA65 <- SMA(Ad(wika_sma2),
+                      n =65)
+
+# SMA 80
+wika_sma2$SMA80 <- SMA(Ad(wika_sma2),
+                n =80)
+```
+
+
+```{r}
+wika_sma2 <- wika_sma2 %>%
+  mutate(
+    signal.SMA = case_when(
+      close < lag(SMA20, 1) & SMA30 < lag(SMA65, 1) ~ "Buy",
+      close > lag(SMA80, 1) & SMA30 > lag(SMA65, 1) ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+```
+
+
+```{r}
+wika_sma2 %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA80))
+```
+
+
+```{r}
+wika_sma2$decision.SMA[wika_sma2$date == "2017-04-10"] <- "Hold"
+
+wika_sma2 %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA80))
+```
+
+
+```{r}
+wika_ema2 <- wika_validasi
+
+# EMA 20
+wika_ema2$EMA20 <- EMA(Ad(wika_ema2),
+                n = 20)
+
+# EMA 30
+wika_ema2$EMA30 <- EMA(Ad(wika_ema2),
+                n = 30)
+
+# EMA 65
+wika_ema2$EMA65 <- EMA(Ad(wika_ema2),
+                n = 65)
+
+# EMA 80
+wika_ema2$EMA80 <- EMA(Ad(wika_ema2),
+                n = 80)
+```
+
+```{r}
+wika_ema2 <- wika_ema2 %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA20, 1) & EMA30 < lag(EMA65, 1) ~ "Buy",
+      adjusted > lag(EMA80, 1) & EMA30 > lag(EMA65, 1) ~ "Sell",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+```
+
+
+```{r}
+wika_ema2 %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA80))
+```
+
+```{r}
+# Membuat objek baru
+wika_macd2 <- wika_validasi
+
+# EMA 6
+wika_macd2$EMA6 <- EMA(Ad(wika_macd2),
+                n =6)
+
+# EMA 10
+wika_macd2$EMA10 <- EMA(Ad(wika_macd2),
+                n = 10)
+
+# EMA 25
+wika_macd2$EMA25 <- EMA(Ad(wika_macd2),
+                n = 25)
+
+# MACD
+wika_macd2$MACD <- wika_macd2$EMA10 - wika_macd2$EMA25
+```
+
+
+```{r}
+wika_macd2 <- wika_macd2 %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(wika_macd2$EMA10, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(wika_macd2$EMA10, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+```
+
+
+```{r}
+wika_macd2 %>% 
+  filter(decision.MACD != "Hold" & ! is.na(EMA25))
+```
+
+
+```{r}
+wika_macd2$decision.MACD[wika_macd2$date == "2017-03-09"] <- "Hold"
+
+wika_macd2 %>% 
+  filter(decision.MACD != "Hold" & ! is.na(EMA25))
+```
+
+```{r}
+wika_rsi2 <- wika_validasi
+
+# RSI 10
+wika_rsi2$RSI5 <- RSI(Ad(wika_rsi2),
+                     n =5)
+
+# RSI 14
+wika_rsi2$RSI20 <- RSI(Ad(wika_rsi2), 
+                      n=20)
+
+# RSI 30
+wika_rsi2$RSI35 <- RSI(Ad(wika_rsi2), 
+                      n=35)
+
+# RSI 65
+wika_rsi2$RSI65 <- RSI(Ad(wika_rsi2), 
+                      n=65)
+```
+
+
+```{r}
+wika_rsi2 <- wika_rsi2 %>% 
+  mutate(
+    signal.RSI = case_when(
+      close < lag(close,1) & RSI5 > RSI20 & RSI5 < RSI65 ~ "Buy",
+      close > lag(close,1) & RSI5 < RSI20 & RSI5 > RSI35 ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+```
+
+
+```{r}
+wika_rsi2 %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI65))
+```
+
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+wika_analisa <- cbind(wika_validasi, wika_sma2$SMA20, wika_sma2$SMA30, wika_sma2$SMA65, wika_sma2$SMA80, wika_ema2$EMA20, wika_ema2$EMA30, wika_ema2$EMA65, wika_ema2$EMA80, wika_macd2$EMA10, wika_macd2$EMA25, wika_macd2$MACD, wika_rsi2$RSI5, wika_rsi2$RSI20, wika_rsi2$RSI35, wika_rsi2$RSI65, wika_sma2$decision.SMA, wika_ema2$decision.EMA, wika_macd2$decision.MACD, wika_rsi2$decision.RSI)
+
+# Mengubah nama kolom
+colnames(wika_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA20", "SMA30", "SMA65", "SMA80", "EMA20", "EMA30", "EMA65", "EMA80", "EMA10", "EMA25", "MACD", "RSI5", "RSI20", "RSI35", "RSI65", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(wika_analisa)
+```
+
+
+```{r}
+wika_analisa <- wika_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+
+wika_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+
+```{r}
+wika_analisa2 <- wika_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.MACD == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.MACD == "Buy" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+
+```{r}
+wika_analisa2$final_decision[wika_analisa2$date == "2017-04-20"] <- "Hold"
+wika_analisa2$final_decision[wika_analisa2$date == "2017-10-31"] <- "Hold"
+wika_analisa2$final_decision[wika_analisa2$date == "2017-11-03"] <- "Hold"
+
+wika_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+wika_x <- wika_analisa2[81:500,]
+```
+
+
+```{r}
+wika_dt <- readRDS("wika_dt.RDS")
+wika_rf <- readRDS("wika_forest.RDS")
+```
+
+```{r}
+dt_pred <- predict(wika_dt, wika_x, type = "response")
+head(dt_pred)
+```
+
+```{r}
+eval_dt_validasi <- confusionMatrix(data = dt_pred,
+                reference = as.factor(wika_x$final_decision))
+
+table(wika_x$final_decision)
+eval_dt_validasi
+```
+
+```{r}
+wika_x$pred_dt <- dt_pred
+
+wika_x
+```
+
+```{r}
+wika_dt_backtest <- wika_x %>% 
+  filter(pred_dt != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_dt")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_dt == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
+    )
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
+    )
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+wika_dt_backtest <- wika_dt_backtest %>% 
+  mutate(
+    profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+wika_dt_backtest
+
+wika_dt_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
+
+
+```{r}
+rf_pred <- predict(wika_rf, wika_x, type = "raw")
+head(rf_pred)
+```
+
+```{r}
+eval_rf_validasi <- confusionMatrix(data = rf_pred,
+                reference = as.factor(wika_x$final_decision))
+
+table(wika_x$final_decision)
+eval_rf_validasi
+```
+
+
+
+```{r}
+wika_x$pred_rf <- rf_pred
+
+wika_x
+```
+
+```{r}
+wika_rf_backtest <- wika_x %>% 
+  filter(pred_rf != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_rf")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_rf == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_rf == "Sell", lag(total_stock),0)
+    )
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_rf == "Buy", open*100,0)
+    )
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_rf == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+wika_rf_backtest <- wika_rf_backtest %>% 
+  mutate(
+    profit = ifelse(pred_rf == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+wika_rf_backtest
+
+wika_rf_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```

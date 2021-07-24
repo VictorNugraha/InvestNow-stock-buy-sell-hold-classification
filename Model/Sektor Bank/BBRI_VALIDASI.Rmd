@@ -1,0 +1,452 @@
+---
+title: "Untitled"
+author: "Victor Nugraha"
+date: "7/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(rsconnect)
+
+#data cleanup
+library(tidyverse)
+library(lubridate)
+
+#data visualizaion
+library(ggplot2)
+library(plotly)
+library(glue)
+
+#data collection
+library(quantmod)
+library(tidyquant)
+
+#data processing
+library(TTR)
+
+#cross validation
+library(rsample)
+library(UBL)
+library(imbalance)
+library(caret)
+
+#model
+library(partykit)
+library(stats)
+library(e1071)
+```
+
+
+
+```{r}
+bbri_validasi <- tq_get(x = "BBRI.JK", #Nama saham 
+                        get = "stock.prices", #"stock.prices" berarti mengambil dari Yahoo Finance
+                        from = " 2016-01-01",
+                        to = "2017-12-31")
+
+tail(bbri_validasi)
+```
+
+```{r}
+colSums(is.na(bbri_validasi))
+```
+
+```{r}
+#Membuat object baru
+bbri_sma2 <- bbri_validasi
+
+# SMA 5
+bbri_sma2$SMA5 <- SMA(Ad(bbri_sma2),
+                n = 5)
+
+# SMA 30
+bbri_sma2$SMA30 <- SMA(Ad(bbri_sma2),
+                n = 30)
+
+# SMA 50
+bbri_sma2$SMA50 <- SMA(Ad(bbri_sma2),
+                      n = 50)
+
+# SMA 70
+bbri_sma2$SMA70 <- SMA(Ad(bbri_sma2),
+                n = 70)
+```
+
+
+```{r}
+bbri_sma2 <- bbri_sma2 %>%
+  mutate(
+    signal.SMA = case_when(
+      adjusted < lag(SMA5, 1) & SMA30 < lag(SMA50, 1) ~ "Buy",
+      adjusted > lag(SMA70, 1) & SMA30 > lag(SMA50, 1) ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.SMA = lag(signal.SMA, 1),
+    decision.SMA = case_when(
+      signal.SMA == previous_signal.SMA ~ "Hold",
+      TRUE ~ signal.SMA
+    )
+  )
+```
+
+
+```{r}
+bbri_sma2 %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA70))
+```
+
+
+```{r}
+bbri_sma2$decision.SMA[bbri_sma2$date == "2017-09-05"] <- "Buy"
+bbri_sma2$decision.SMA[bbri_sma2$date == "2017-09-07"] <- "Buy"
+bbri_sma2$decision.SMA[bbri_sma2$date == "2017-09-18"] <- "Buy"
+
+bbri_sma2 %>% 
+  filter(decision.SMA != "Hold" & ! is.na(SMA70))
+```
+
+
+```{r}
+# Membuat objek baru 
+bbri_ema2 <- bbri_validasi
+
+# EMA 5
+bbri_ema2$EMA5 <- EMA(Ad(bbri_ema2),
+                n = 5)
+
+# EMA 15
+bbri_ema2$EMA15 <- EMA(Ad(bbri_ema2),
+                n = 15)
+
+# EMA 50
+bbri_ema2$EMA50 <- EMA(Ad(bbri_ema2),
+                n = 50)
+
+# EMA 70
+bbri_ema2$EMA70 <- EMA(Ad(bbri_ema2),
+                n = 70)
+```
+
+```{r}
+bbri_ema2 <- bbri_ema2 %>% 
+  mutate(
+    signal.EMA = case_when(
+      adjusted < lag(EMA5, 1) & EMA15 < lag(EMA50, 1) ~ "Buy",
+      adjusted > lag(EMA70, 1) & EMA15 > lag(EMA50, 1) ~ "Sell",
+      TRUE ~ "Hold"# Otherwise sell
+    ),
+    previous_signal.EMA = lag(signal.EMA, 1), 
+    decision.EMA = case_when( 
+      signal.EMA == previous_signal.EMA ~ "Hold",
+      TRUE ~ signal.EMA
+    )
+  )
+```
+
+
+```{r}
+bbri_ema2 %>% 
+  filter(decision.EMA != "Hold" & ! is.na(EMA70))
+```
+
+```{r}
+# Membuat objek baru
+bbri_macd2 <- bbri_validasi
+
+# EMA 15
+bbri_macd2$EMA15 <- bbri_ema2$EMA15
+
+# EMA 50
+bbri_macd2$EMA50 <- bbri_ema2$EMA50
+
+# MACD
+bbri_macd2$MACD <- bbri_ema2$EMA15 - bbri_ema2$EMA50
+```
+
+
+```{r}
+bbri_macd2 <- bbri_macd2 %>% 
+  mutate(
+    signal.MACD = case_when(
+      adjusted < lag(bbri_ema2$EMA5, 1) & MACD < 0 & lag(MACD, 1) < MACD ~ "Buy", 
+      adjusted > lag(bbri_ema2$EMA5, 1) & MACD > 0 & lag(MACD, 1) > MACD ~ "Sell", 
+      TRUE ~ "Hold"
+    ),
+    previous_signal.MACD = lag(signal.MACD, 1), 
+    decision.MACD = case_when( 
+      signal.MACD == previous_signal.MACD ~ "Hold",
+      TRUE ~ signal.MACD
+    )
+  )
+```
+
+
+```{r}
+bbri_macd2 %>% 
+  filter(decision.MACD != "Hold" & ! is.na(EMA50))
+```
+
+
+```{r}
+# Membuat objek baru
+bbri_rsi2 <- bbri_validasi
+
+# RSI 7
+bbri_rsi2$RSI7 <- RSI(Ad(bbri_rsi2),
+                     n =7)
+
+# RSI 14
+bbri_rsi2$RSI14 <- RSI(Ad(bbri_rsi2), 
+                      n=14)
+
+# RSI 30
+bbri_rsi2$RSI30 <- RSI(Ad(bbri_rsi2), 
+                      n=30)
+
+# RSI 70
+bbri_rsi2$RSI70 <- RSI(Ad(bbri_rsi2), 
+                      n=70)
+```
+
+
+```{r}
+bbri_rsi2 <- bbri_rsi2 %>% 
+  mutate(
+    signal.RSI = case_when(
+      adjusted < lag(adjusted,1) & RSI7 > RSI14 & RSI7 < RSI70 ~ "Buy",
+      adjusted > lag(adjusted,1) & RSI7 < RSI14 & RSI7 > RSI30 ~ "Sell",
+      TRUE ~ "Hold"
+    ),
+    previous_signal.RSI = lag(signal.RSI, 1),
+    decision.RSI = case_when( 
+      signal.RSI == previous_signal.RSI ~ "Hold",
+      TRUE ~ signal.RSI
+    )
+  )
+```
+
+
+```{r}
+bbri_rsi2 %>% 
+  filter(decision.RSI != "Hold" & ! is.na(RSI70))
+```
+
+
+```{r}
+# Menggabungkan kedalam sebuah data frame baru
+bbri_analisa <- cbind(bbri_validasi,bbri_sma2$SMA5, bbri_sma2$SMA30, bbri_sma2$SMA50, bbri_sma2$SMA70, bbri_ema2$EMA5, bbri_ema2$EMA15, bbri_ema2$EMA50, bbri_ema2$EMA70, bbri_macd2$MACD, bbri_rsi2$RSI7, bbri_rsi2$RSI14, bbri_rsi2$RSI30, bbri_rsi2$RSI70, bbri_sma2$decision.SMA, bbri_ema2$decision.EMA, bbri_macd2$decision.MACD, bbri_rsi2$decision.RSI)
+
+# Mengubah nama kolom
+colnames(bbri_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA5", "SMA30", "SMA50", "SMA70", "EMA5", "EMA15", "EMA50", "EMA70", "MACD", "RSI7", "RSI14", "RSI30", "RSI70", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
+
+head(bbri_analisa)
+```
+
+
+```{r}
+bbri_analisa <- bbri_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+
+bbri_analisa %>% 
+  filter(final_decision != "Hold")
+```
+
+
+```{r}
+bbri_analisa2 <- bbri_analisa %>% 
+  mutate(
+    final_decision = case_when(
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Buy" &  decision.EMA == "Buy" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Buy" | decision.RSI == "Buy" ~ "Buy",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Buy" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Buy" & decision.MACD == "Sell" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Buy" & decision.RSI == "Sell" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      decision.SMA == "Sell" &  decision.EMA == "Sell" & decision.MACD == "Sell" & decision.RSI == "Buy" | decision.MACD == "Sell" | decision.RSI == "Sell" ~ "Sell",
+      TRUE ~ "Hold"
+    )
+  )
+```
+
+
+```{r}
+bbri_analisa2 %>%
+  select(c("date", "open", "close", "final_decision")) %>% 
+  filter(final_decision != "Hold")
+```
+
+```{r}
+bbri_x <- bbri_analisa2[71:500,]
+```
+
+
+```{r}
+bbri_dt <- readRDS("bbri_dt.RDS")
+bbri_rf <- readRDS("bbri_forest.RDS")
+```
+
+```{r}
+dt_pred <- predict(bbri_dt, bbri_x, type = "response")
+head(dt_pred)
+```
+
+```{r}
+eval_dt_validasi <- confusionMatrix(data = dt_pred,
+                reference = as.factor(bbri_x$final_decision))
+
+table(bbri_x$final_decision)
+eval_dt_validasi
+```
+
+```{r}
+bbri_x$pred_dt <- dt_pred
+
+bbri_x
+```
+
+```{r}
+bbri_dt_backtest <- bbri_x %>% 
+  filter(pred_dt != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_dt")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_dt == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+bbri_dt_backtest
+
+bbri_dt_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
+
+
+```{r}
+rf_pred <- predict(bbri_rf, bbri_x, type = "raw")
+head(rf_pred)
+```
+
+```{r}
+eval_rf_validasi <- confusionMatrix(data = rf_pred,
+                reference = as.factor(bbri_x$final_decision))
+
+table(bbri_x$final_decision)
+eval_rf_validasi
+```
+
+
+
+```{r}
+bbri_x$pred_rf <- rf_pred
+
+bbri_x
+```
+
+```{r}
+bbri_rf_backtest <- bbri_x %>% 
+  filter(pred_rf != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_rf")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_rf == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_rf == "Sell", lag(total_stock),0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_rf == "Buy", open*100,0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_rf == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    profit = ifelse(pred_rf == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+bbri_rf_backtest
+
+bbri_rf_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```

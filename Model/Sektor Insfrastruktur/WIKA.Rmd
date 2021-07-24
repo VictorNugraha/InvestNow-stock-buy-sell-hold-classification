@@ -536,6 +536,9 @@ table(wika_train_smote$final_decision)
 
 ```{r, fig.dim = c(50 , 50)}
 model_dt <- ctree(final_decision ~ ., data = wika_train_smote)
+
+#saveRDS(model_dt, "wika_dt.RDS")
+
 plot(model_dt, type = "simple")
 ```
 

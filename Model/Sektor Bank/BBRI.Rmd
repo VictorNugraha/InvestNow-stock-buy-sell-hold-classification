@@ -116,7 +116,8 @@ bbri_plot <- ggplot(data = bbri_mutate,
     text = label,
     group = 1
   )) +
-  geom_line(color = "black") +
+  geom_line(color = "#69b3a2")+
+  geom_area(fill="#69b3a2", alpha=0.5) +
   labs(title = "BBRI",
        subtitle = "",
        x = "Date",
@@ -135,6 +136,73 @@ Pada bagian advance chart akan lebih rumit jika dibandingkan dengan basic chart,
 Candlestick chart merupakan grafik riwayat data nilai harga suatu saham yang terbentuk dari nilai harga pembukaan, nilai harga tertinggi, nilai harga terendah dan nilai harga penutupan dari gerakan suatu saham dalam periode waktu tertentu pada sebuah pergerakannya di bursa saham. Biasanya di dalam candlestick akan diisi dengan warna hijau atau merah, kedua warna tersebut memiliki arti yang berbeda. Warna hijau jika penutupan lebih besar dari penutupan sebelumnya tetapi lebih rendah dari pembukaan dan warna merah terjadi saat penutupan di bawah pembukaan dan penutupan sebelumnya.
 
 Sedangkan Bar chart akan digunakan untuk memberikan informasi tentang volume persediaan. Volume dalam stok dapat menjadi barometer aktivitas dan arah di masa depan. Volume mengukur jumlah kontrak yang dipertukarkan selama sesi perdagangan. Ini mengukur aktivitas pasar.
+
+```{r}
+#Membuat candlestick plot 
+bbri_ploty2 <- bbri %>%
+  plot_ly(type = "area", 
+          Price = ~close,
+          name = "Price (Rp)") %>%
+  layout(
+    xaxis = list(
+      rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 Day",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 5,
+            label = "5 Days",
+            step = "day",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Month",
+            step = "week",
+            stepmode = "backward"),
+          list(
+            count = 3,
+            label = "3 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 6,
+            label = "6 Months",
+            step = "month",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "1 Year",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 2,
+            label = "2 Years",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            label = "Max",
+            step = "all"))),
+      rangeslider = list(visible = FALSE)),
+         yaxis = list(title = "Price (Rp)",
+                      showgrid = TRUE,
+                      showticklabels = TRUE))
+
+#Membuat bar plot untuk volume saham BRI
+bbri_ploty3 <- bbri %>%
+  plot_ly(x=~date, 
+          y=~volume, 
+          type='bar', 
+          name = "Volume") %>%
+  layout(yaxis = list(title = "Volume"))
+
+#Menggabungkan 2 plot menjadi 1 plot
+bbri_fig <- subplot(bbri_ploty2, bbri_ploty3, heights = c(0.7,0.2), nrows=2,
+             shareX = TRUE, titleY = TRUE)
+bbri_fig
+```
 
 ```{r}
 #Membuat candlestick plot 
@@ -285,6 +353,7 @@ bbri_sma <- bbri_sma %>%
 
 tail(bbri_sma)
 ```
+
 
 <b>Evaluasi Analisa SMA</b>
 
@@ -781,6 +850,65 @@ bbri_analisa2 %>%
 ```
 
 ```{r}
+bbri_backtest <- bbri_analisa2 %>% 
+  filter(final_decision != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision")) %>% 
+  mutate(
+    stock_buy = case_when(
+      final_decision == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+bbri_backtest <- bbri_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_backtest <- bbri_backtest %>% 
+  mutate(
+    stock_sell = ifelse(final_decision == "Sell", lag(total_stock),0)
+    )
+
+bbri_backtest <- bbri_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(final_decision == "Buy", open*100,0)
+    )
+
+bbri_backtest <- bbri_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_backtest <- bbri_backtest %>% 
+  mutate(
+    avg_price = ifelse(final_decision == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+bbri_backtest <- bbri_backtest %>% 
+  mutate(
+    profit = ifelse(final_decision == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+bbri_backtest
+
+bbri_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
+```
+
+
+```{r}
+library(data.table)
+bbri_backtest$total_stock <- with(bbri_backtest, ave(stock_buy, rleid(stock_buy), FUN = cumsum))
+```
+
+
+```{r}
 #Total keuntungan dengan indikator gabungan ke-1 yang sudah dievaluasi
 evaluasi3 <- ((3180*100) - (((3260*100) + (3170*100) + (3150*100) + (3210*100) + (2960*100) + (2900*100))/6))*6
 evaluasi3
@@ -791,10 +919,10 @@ Setelah hasil kolom final_decision pada tanggal 13-4-2018 diganti dari "Sell" me
 # Cross Validation
 
 ```{r}
-bbri_cv <- bbri_analisa2[71:883,] %>%
+bbri_cv <- bbri_analisa2[71:896,] %>%
   mutate_if(is.character, as.factor)
-  
-glimpse(bbri_cv)
+
+bbri_cv2 <- bbri_analisa2[-(1:70),]
 ```
 
 ```{r, message=FALSE, warning=FALSE}
@@ -842,6 +970,8 @@ plot(model_dt, type = "simple")
 ```{r}
 pred_model_dt <- predict(object = model_dt, newdata = bbri_test, type = "response")
 
+#saveRDS(model_dt, "bbri_dt.RDS")
+
 head(pred_model_dt)
 ```
 
@@ -851,6 +981,64 @@ eval_pred_model_dt <- confusionMatrix(pred_model_dt,
 
 table(bbri_test$final_decision)
 eval_pred_model_dt 
+```
+
+```{r}
+bbri_test$pred_dt <- pred_model_dt
+
+bbri_test
+```
+
+```{r}
+bbri_dt_backtest <- bbri_test %>% 
+  filter(pred_dt != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_dt")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_dt == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+bbri_dt_backtest <- bbri_dt_backtest %>% 
+  mutate(
+    profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+bbri_dt_backtest
+
+bbri_dt_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
 ```
 
 ## Random Forest
@@ -884,5 +1072,63 @@ eval_rf <- confusionMatrix(data = rm_pred,
 
 table(bbri_test$final_decision)
 eval_rf
+```
+
+```{r}
+bbri_test$pred_rf <- rm_pred
+
+bbri_test
+```
+
+```{r}
+bbri_rf_backtest <- bbri_test %>% 
+  filter(pred_rf != "Hold") %>% 
+  select(c("date", "open", "close", "final_decision", "pred_rf")) %>% 
+  mutate(
+    stock_buy = case_when(
+      pred_rf == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    stock_sell = ifelse(pred_rf == "Sell", lag(total_stock),0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    price_stock_bought = ifelse(pred_rf == "Buy", open*100,0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
+  ungroup() %>% 
+  select(-grp) %>%
+  as.data.frame()
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    avg_price = ifelse(pred_rf == "Sell", lag(commulative_stock_price)/stock_sell,0)
+    )
+
+bbri_rf_backtest <- bbri_rf_backtest %>% 
+  mutate(
+    profit = ifelse(pred_rf == "Sell", (close*100 - avg_price)*stock_sell ,0)
+    )
+
+bbri_rf_backtest
+
+bbri_rf_backtest %>% 
+  filter(profit != 0 & profit != "NaN") %>% 
+  summarise(total_proft = sum(profit))
 ```
 

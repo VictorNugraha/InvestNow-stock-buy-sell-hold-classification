@@ -587,6 +587,8 @@ plot(model_dt, type = "simple")
 ```{r}
 pred_model_dt <- predict(object = model_dt, newdata = sido_test, type = "response")
 
+# saveRDS(pred_model_dt, "sido_dt.RDS")
+
 head(pred_model_dt)
 ```
 

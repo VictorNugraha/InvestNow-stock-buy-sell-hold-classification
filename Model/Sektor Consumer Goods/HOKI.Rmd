@@ -563,6 +563,9 @@ table(hoki_train_smote$final_decision)
 
 ```{r, fig.dim = c(50 , 50)}
 model_dt <- ctree(final_decision ~ ., data = hoki_train_smote)
+
+# saveRDS(model_dt, "hoki_dt.RDS")
+
 plot(model_dt, type = "simple")
 ```
 
