@@ -18,6 +18,9 @@ navbarPage(
            #ID NavBar---
            id = "inTabset",
           
+          header = tagList(useShinydashboard()),
+          
+          
 #------------------------------
 #NAV BAR MENU PANEL ABOUT PAGE---   
            navbarMenu("About",
@@ -187,10 +190,9 @@ navbarPage(
                                      border-radius:10px;
                                      border-size:15px",
                               HTML(
-                                paste("
-                                      <b><center><u>MACHINE LEARNING</b></center></u>
-                                      <br>
-                                      ...
+                                paste("<b><center><u>MACHINE LEARNING</b></center></u>
+                                      <br> There are two variant of machine learning InvestNow offered to the investor to be used to provied suggestion. <br><b>- Decistion Tree Model</b><br><b>- Random Forest Model</b>
+                                      <br><br>With two variation of machine learning model, investors are given the freedom to choose what model they feel gives the best suggestion for themselves
                                       "
                                       )
                                     )
@@ -210,7 +212,9 @@ navbarPage(
                          value = 'trading',
                          fluidRow(
                            useShinyjs(),
+                           column(width = 12, uiOutput("text1")),
                            column(width = 12,
+                           br(),
                            actionButton(inputId = 'bbri.jk',
                                         icon = icon("bank"),
                                         label = strong('BBRI'),
@@ -244,16 +248,18 @@ navbarPage(
                            align = "center",
                            style = "margin-bottom: 10px;",
                            style = "margin-top: -10px;",
-                           hr(),
+                           br()
                             ),
 
                            fluidPage(
                              fluidRow(
-                             column(
-                                 width = 8,
-                                 uiOutput("plot_output")),
-                             column(
-                               width = 4,
+                             box(
+                               collapsible = F,
+                               width = 9,
+                               uiOutput("plot_output")),
+                             box(
+                              collapsible = T,
+                              width = 3,
                               uiOutput("suggestion"))
                               )
                              )
@@ -262,8 +268,14 @@ navbarPage(
 
            # Tab Panel Portfolio - G/L Simulator---     
            tabPanel(title = "G/L Simulator",
-                    "Comparison")
-                  ),
+                    fluidRow(
+                      column(width = 12, uiOutput("text2")),
+                      box(width = 8, uiOutput("selection_comp")),
+                      column(width = 6, uiOutput("with_ml")),
+                      column(width = 6, uiOutput("wo_ml"))
+                        )
+                      )
+                    ),
 
 #------------------------------
 #NAV BAR TAB PANEL PROFILE---  

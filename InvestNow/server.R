@@ -63,6 +63,23 @@ function(input, output, session) {
 #------------------------------  
 #NAV BAR TAB PANEL PORTFOLIO-TRADING ASSISTANCE---    
   
+  output$text1 <- renderUI({
+    
+    div(
+      style="text-align:justify;
+             font-size: 15px;
+             color:black;
+             background-color: white ;
+             border-color:black;
+             padding:15px;
+             border-radius:10px;
+             border-size:15px",
+      HTML(
+        paste("<b><u><center>PLEASE SELECT ONE STOCK TO BE ANALYZED :</center></b></u>")
+      )
+    )
+  })
+  
   observeEvent(input$bbri.jk, {
     output$plot_output <- renderUI({
       tabsetPanel(
@@ -75,44 +92,92 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(
-        style="text-align:justify;
-        font-size: 15px;
-        color:black;
-        background-color: whitesmoke ;
-        border-color:black;
-        padding:15px;
-        border-radius:10px;
-        border-size:15px",
         HTML(
-          paste("<b><center><u>MACHINE LEARNING SUGGESTION</b></center></u>
-                 <br>
-                ")),
-        prettyRadioButtons(
-          inputId = "ml",
-          shape = "curve",
-          label = "Please select one machine learning model :",
-          choices = c("Decision Tree ML", "Random Forest ML"),
-          icon = icon("check"),
-          status = "info",
-          inline = TRUE,
-          animation = "jelly"),
+          paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "prediction_result_bbri", width = 12),
         hr(),
-        valueBoxOutput(outputId = "prediction_result", width = 4)
+        HTML(
+          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "bbri_ta_sma", width = 12),
+        valueBoxOutput(outputId = "bbri_ta_ema", width = 12),
+        valueBoxOutput(outputId = "bbri_ta_macd", width = 12),
+        valueBoxOutput(outputId = "bbri_ta_rsi", width = 12),
+        dropdownButton(right = TRUE,
+                       size = "sm",
+                       circle = FALSE,
+                       icon = icon("gear"),
+                       tooltip = tooltipOptions(title = "Additional Information!"))
         )
     })
     
+  }, ignoreNULL = FALSE)
+  
+  output$prediction_result_bbri <- renderValueBox({
+    
+    fnl_sug_bbri <- bbri_suggestion %>% 
+      select("pred_dt") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(fnl_sug_bbri == "Buy", "green", ifelse(fnl_sug_bbri == "Sell", "red", "yellow")),
+             value = fnl_sug_bbri,
+             subtitle = "Machine Learning Suggestion",
+             icon = icon("balance-scale")
+             )
+    })
+  
+  output$bbri_ta_sma <- renderValueBox({
+    
+    sug_bbri_sma <- bbri_suggestion %>% 
+      select("decision.SMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_bbri_sma == "Buy", "green", ifelse(sug_bbri_sma == "Sell", "red", "yellow")),
+             value = sug_bbri_sma,
+             subtitle = "SMA Analysis",
+             icon = icon("tasks")
+    )
   })
   
-  # output$prediction_result <- renderValueBox({
-  #   
-  #   valueBox(
-  #     subtitle = "Decision Tree Suggestion",
-  #     icon = icon("gopuram"),
-  #     value = ,
-  #     color = "blue",
-  #     width = 4
-  #   )
-  # })
+  output$bbri_ta_ema <- renderValueBox({
+    
+    sug_bbri_ema <- bbri_suggestion %>% 
+      select("decision.EMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_bbri_ema == "Buy", "green", ifelse(sug_bbri_ema == "Sell", "red", "yellow")),
+             value = sug_bbri_ema,
+             subtitle = "EMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$bbri_ta_macd <- renderValueBox({
+    
+    sug_bbri_macd <- bbri_suggestion %>% 
+      select("decision.MACD") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_bbri_macd == "Buy", "green", ifelse(sug_bbri_macd == "Sell", "red", "yellow")),
+             value = sug_bbri_macd,
+             subtitle = "MACD Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$bbri_ta_rsi <- renderValueBox({
+    
+    sug_bbri_rsi <- bbri_suggestion %>% 
+      select("decision.RSI") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_bbri_rsi == "Buy", "green", ifelse(sug_bbri_rsi == "Sell", "red", "yellow")),
+             value = sug_bbri_rsi,
+             subtitle = "RSI Analysis",
+             icon = icon("tasks")
+    )
+  })
   
   observeEvent(input$isat.jk, {
     output$plot_output <- renderUI({
@@ -126,32 +191,91 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(
-        style="text-align:justify;
-        font-size: 15px;
-        color:black;
-        background-color: whitesmoke ;
-        border-color:black;
-        padding:15px;
-        border-radius:10px;
-        border-size:15px",
         HTML(
-          paste("<b><center><u>MACHINE LEARNING SUGGESTION</b></center></u>
-                 <br>
-                ")),
-        prettyRadioButtons(
-          inputId = "ml",
-          shape = "curve",
-          label = "Please select one machine learning model :",
-          choices = c("Decision Tree ML", "Random Forest ML"),
-          icon = icon("check"),
-          status = "info",
-          inline = TRUE,
-          animation = "jelly"),
+          paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "prediction_result_isat", width = 12),
         hr(),
-        valueBoxOutput(outputId = "prediction_result", width = 4)
+        HTML(
+          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "isat_ta_sma", width = 12),
+        valueBoxOutput(outputId = "isat_ta_ema", width = 12),
+        valueBoxOutput(outputId = "isat_ta_macd", width = 12),
+        valueBoxOutput(outputId = "isat_ta_rsi", width = 12),
+        dropdownButton(right = TRUE,
+                       size = "sm",
+                       circle = FALSE,
+                       icon = icon("gear"),
+                       tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
+  })
+  
+  output$prediction_result_isat <- renderValueBox({
+    
+    fnl_sug_isat <- isat_suggestion %>% 
+      select("pred_dt") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(fnl_sug_isat == "Buy", "green", ifelse(fnl_sug_isat == "Sell", "red", "yellow")),
+             value = fnl_sug_isat,
+             subtitle = "Machine Learning Suggestion",
+             icon = icon("balance-scale")
+    )
+  })
+  
+  output$isat_ta_sma <- renderValueBox({
+    
+    sug_isat_sma <- isat_suggestion %>% 
+      select("decision.SMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_isat_sma == "Buy", "green", ifelse(sug_isat_sma == "Sell", "red", "yellow")),
+             value = sug_isat_sma,
+             subtitle = "SMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$isat_ta_ema <- renderValueBox({
+    
+    sug_isat_ema <- isat_suggestion %>% 
+      select("decision.EMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_isat_ema == "Buy", "green", ifelse(sug_isat_ema == "Sell", "red", "yellow")),
+             value = sug_isat_ema,
+             subtitle = "EMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$isat_ta_macd <- renderValueBox({
+    
+    sug_isat_macd <- isat_suggestion %>% 
+      select("decision.MACD") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_isat_macd == "Buy", "green", ifelse(sug_isat_macd == "Sell", "red", "yellow")),
+             value = sug_isat_macd,
+             subtitle = "MACD Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$isat_ta_rsi <- renderValueBox({
+    
+    sug_isat_rsi <- isat_suggestion %>% 
+      select("decision.RSI") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_isat_rsi == "Buy", "green", ifelse(sug_isat_rsi == "Sell", "red", "yellow")),
+             value = sug_isat_rsi,
+             subtitle = "RSI Analysis",
+             icon = icon("tasks")
+    )
   })
   
   observeEvent(input$sidomuncul, {
@@ -166,29 +290,23 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(
-        style="text-align:justify;
-        font-size: 15px;
-        color:black;
-        background-color: whitesmoke ;
-        border-color:black;
-        padding:15px;
-        border-radius:10px;
-        border-size:15px",
         HTML(
-          paste("<b><center><u>MACHINE LEARNING SUGGESTION</b></center></u>
-                 <br>
-                ")),
-        prettyRadioButtons(
-          inputId = "ml",
-          shape = "curve",
-          label = "Please select one machine learning model :",
-          choices = c("Decision Tree ML", "Random Forest ML"),
-          icon = icon("check"),
-          status = "info",
-          inline = TRUE,
-          animation = "jelly"),
+          paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "prediction_result_sido", width = 12),
         hr(),
-        valueBoxOutput(outputId = "prediction_result", width = 4)
+        HTML(
+          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "sido_ta_sma", width = 12),
+        valueBoxOutput(outputId = "sido_ta_ema", width = 12),
+        valueBoxOutput(outputId = "sido_ta_macd", width = 12),
+        valueBoxOutput(outputId = "sido_ta_rsi", width = 12),
+        dropdownButton(right = TRUE,
+                       size = "sm",
+                       circle = FALSE,
+                       icon = icon("gear"),
+                       tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
@@ -206,34 +324,87 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(
-        style="text-align:justify;
-        font-size: 15px;
-        color:black;
-        background-color: whitesmoke ;
-        border-color:black;
-        padding:15px;
-        border-radius:10px;
-        border-size:15px",
         HTML(
-          paste("<b><center><u>MACHINE LEARNING SUGGESTION</b></center></u>
-                 <br>
-                ")),
-        prettyRadioButtons(
-          inputId = "ml",
-          shape = "curve",
-          label = "Please select one machine learning model :",
-          choices = c("Decision Tree ML", "Random Forest ML"),
-          icon = icon("check"),
-          status = "info",
-          inline = TRUE,
-          animation = "jelly"),
+          paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "prediction_result_hoki", width = 12),
         hr(),
-        valueBoxOutput(outputId = "prediction_result", width = 4)
+        HTML(
+          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "hoki_ta_sma", width = 12),
+        valueBoxOutput(outputId = "hoki_ta_ema", width = 12),
+        valueBoxOutput(outputId = "hoki_ta_macd", width = 12),
+        valueBoxOutput(outputId = "hoki_ta_rsi", width = 12)
       )
     })
     
   })
   
+  output$prediction_result_hoki <- renderValueBox({
+    
+    fnl_sug_hoki <- hoki_suggestion %>% 
+      select("pred_dt") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(fnl_sug_hoki == "Buy", "green", ifelse(fnl_sug_hoki == "Sell", "red", "yellow")),
+             value = fnl_sug_hoki,
+             subtitle = "Machine Learning Suggestion",
+             icon = icon("balance-scale")
+    )
+  })
+  
+  output$hoki_ta_sma <- renderValueBox({
+    
+    sug_hoki_sma <- hoki_suggestion %>% 
+      select("decision.SMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_hoki_sma == "Buy", "green", ifelse(sug_hoki_sma == "Sell", "red", "yellow")),
+             value = sug_hoki_sma,
+             subtitle = "SMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$hoki_ta_ema <- renderValueBox({
+    
+    sug_hoki_ema <- hoki_suggestion %>% 
+      select("decision.EMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_hoki_ema == "Buy", "green", ifelse(sug_hoki_ema == "Sell", "red", "yellow")),
+             value = sug_hoki_ema,
+             subtitle = "EMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$hoki_ta_macd <- renderValueBox({
+    
+    sug_hoki_macd <- hoki_suggestion %>% 
+      select("decision.MACD") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_hoki_macd == "Buy", "green", ifelse(sug_hoki_macd == "Sell", "red", "yellow")),
+             value = sug_hoki_macd,
+             subtitle = "MACD Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$hoki_ta_rsi <- renderValueBox({
+    
+    sug_hoki_rsi <- hoki_suggestion %>% 
+      select("decision.RSI") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_hoki_rsi == "Buy", "green", ifelse(sug_hoki_rsi == "Sell", "red", "yellow")),
+             value = sug_hoki_rsi,
+             subtitle = "RSI Analysis",
+             icon = icon("tasks")
+    )
+  })
   
   observeEvent(input$wijayakarya, {
     output$plot_output <- renderUI({
@@ -247,32 +418,91 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(
-        style="text-align:justify;
-        font-size: 15px;
-        color:black;
-        background-color: whitesmoke ;
-        border-color:black;
-        padding:15px;
-        border-radius:10px;
-        border-size:15px",
         HTML(
-          paste("<b><center><u>MACHINE LEARNING SUGGESTION</b></center></u>
-                 <br>
-                ")),
-        prettyRadioButtons(
-          inputId = "ml",
-          shape = "curve",
-          label = "Please select one machine learning model :",
-          choices = c("Decision Tree ML", "Random Forest ML"),
-          icon = icon("check"),
-          status = "info",
-          inline = TRUE,
-          animation = "jelly"),
+          paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "prediction_result_wika", width = 12),
         hr(),
-        valueBoxOutput(outputId = "prediction_result", width = 4)
+        HTML(
+          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                 <br>")),
+        valueBoxOutput(outputId = "wika_ta_sma", width = 12),
+        valueBoxOutput(outputId = "wika_ta_ema", width = 12),
+        valueBoxOutput(outputId = "wika_ta_macd", width = 12),
+        valueBoxOutput(outputId = "wika_ta_rsi", width = 12),
+        dropdownButton(right = TRUE,
+                       size = "sm",
+                       circle = FALSE,
+                       icon = icon("gear"),
+                       tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
+  })
+  
+  output$prediction_result_wika <- renderValueBox({
+    
+    fnl_sug_wika <- wika_suggestion %>% 
+      select("pred_dt") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(fnl_sug_wika == "Buy", "green", ifelse(fnl_sug_wika == "Sell", "red", "yellow")),
+             value = fnl_sug_wika,
+             subtitle = "Machine Learning Suggestion",
+             icon = icon("balance-scale")
+    )
+  })
+  
+  output$wika_ta_sma <- renderValueBox({
+    
+    sug_wika_sma <- wika_suggestion %>% 
+      select("decision.SMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_wika_sma == "Buy", "green", ifelse(sug_wika_sma == "Sell", "red", "yellow")),
+             value = sug_wika_sma,
+             subtitle = "SMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$wika_ta_ema <- renderValueBox({
+    
+    sug_wika_ema <- wika_suggestion %>% 
+      select("decision.EMA") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_wika_ema == "Buy", "green", ifelse(sug_wika_ema == "Sell", "red", "yellow")),
+             value = sug_wika_ema,
+             subtitle = "EMA Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$wika_ta_macd <- renderValueBox({
+    
+    sug_wika_macd <- wika_suggestion %>% 
+      select("decision.MACD") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_wika_macd == "Buy", "green", ifelse(sug_wika_macd == "Sell", "red", "yellow")),
+             value = sug_wika_macd,
+             subtitle = "MACD Analysis",
+             icon = icon("tasks")
+    )
+  })
+  
+  output$wika_ta_rsi <- renderValueBox({
+    
+    sug_wika_rsi <- wika_suggestion %>% 
+      select("decision.RSI") %>% 
+      tail(1)
+    
+    valueBox(color = ifelse(sug_wika_rsi == "Buy", "green", ifelse(sug_wika_rsi == "Sell", "red", "yellow")),
+             value = sug_wika_rsi,
+             subtitle = "RSI Analysis",
+             icon = icon("tasks")
+    )
   })
   
   # Output Plot Basic BBRI---
@@ -400,12 +630,13 @@ function(input, output, session) {
                             text = label,
                             group = 1
                           )) +
-        geom_line(color = "black") +
+        geom_line(color = "#69b3a2")+
+        geom_area(fill="#69b3a2", alpha=0.5) +
         labs(title = "ISAT",
              subtitle = "",
              x = "Date",
              y = "Price (Rp)") +
-        theme_classic()
+        theme_ipsum()
 
       #Megubah dari plot biasa menjadi plotly agar lebih informatif
       isat_plotly <- ggplotly(isat_plot, tooltip = "label")
@@ -509,12 +740,13 @@ function(input, output, session) {
                             text = label,
                             group = 1
                           )) +
-        geom_line(color = "black") +
+        geom_line(color = "#69b3a2")+
+        geom_area(fill="#69b3a2", alpha=0.5) +
         labs(title = "SIDO",
              subtitle = "",
              x = "Date",
              y = "Price (Rp)") +
-        theme_classic()
+        theme_ipsum()
 
       #Megubah dari plot biasa menjadi plotly agar lebih informatif
       sido_plotly <- ggplotly(sido_plot, tooltip = "label")
@@ -537,7 +769,7 @@ function(input, output, session) {
                 name = "Price (Rp)") %>%
         layout(
           xaxis = list(
-            rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+            rangeselector = list( 
               buttons = list(
                 list(
                   count = 1,
@@ -618,12 +850,13 @@ function(input, output, session) {
                             text = label,
                             group = 1
                           )) +
-        geom_line(color = "black") +
+        geom_line(color = "#69b3a2")+
+        geom_area(fill="#69b3a2", alpha=0.5) +
         labs(title = "HOKI",
              subtitle = "",
              x = "Date",
              y = "Price (Rp)") +
-        theme_classic()
+        theme_ipsum()
 
       #Megubah dari plot biasa menjadi plotly agar lebih informatif
       hoki_plotly <- ggplotly(hoki_plot, tooltip = "label")
@@ -647,7 +880,7 @@ function(input, output, session) {
                 name = "Price (Rp)") %>%
         layout(
           xaxis = list(
-            rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+            rangeselector = list( 
               buttons = list(
                 list(
                   count = 1,
@@ -728,12 +961,13 @@ function(input, output, session) {
                             text = label,
                             group = 1
                           )) +
-        geom_line(color = "black") +
+        geom_line(color = "#69b3a2")+
+        geom_area(fill="#69b3a2", alpha=0.5) +
         labs(title = "WIKA",
              subtitle = "",
              x = "Date",
              y = "Price (Rp)") +
-        theme_classic()
+        theme_ipsum()
 
       #Megubah dari plot biasa menjadi plotly agar lebih informatif
       wika_plotly <- ggplotly(wika_plot, tooltip = "label")
@@ -757,7 +991,7 @@ function(input, output, session) {
                 name = "Price (Rp)") %>%
         layout(
           xaxis = list(
-            rangeselector = list( #Membuat rangeselector untuk melihat pergerakan saham BRI dari 1 hari kebelakang sampai dengan 2 tahun ke belakang.
+            rangeselector = list( 
               buttons = list(
                 list(
                   count = 1,
@@ -816,6 +1050,57 @@ function(input, output, session) {
       wika_fig
 
     })
+  })
+
+  #------------------------------  
+  #NAV BAR TAB PANEL PORTFOLIO-GAINLOSS SIMULATOR--- 
+
+  output$text2 <- renderUI({
+    
+    div(
+      style="text-align:justify;
+             font-size: 15px;
+             color:black;
+             background-color: white ;
+             border-color:black;
+             padding:15px;
+             border-radius:10px;
+             border-size:15px",
+      HTML(
+        paste("<b><center><u>INVESTMENT SIMULATION</b></center></u>"
+        )
+      )
+    )
+  })
+  
+  output$selection_comp <- renderUI({
+    div(
+      style="text-align:justify;
+        font-size: 15px;
+        color:black;
+        background-color: whitesmoke ;
+        border-color:black;
+        padding:15px;
+        border-radius:10px;
+        border-size:15px",
+      prettyRadioButtons(width = "150%",
+        inputId = "stocks",
+        shape = "curve",
+        label = "Please select one stock to be simulate :",
+        choices = c("BBRI", "ISAT", "SIDO", "HOKI", "WIKA"),
+        icon = icon("check"),
+        status = "info",
+        inline = TRUE,
+        animation = "jelly"),
+      dateRangeInput(
+        inputId = "date",
+        label = "Please Pick Range Of Date:",
+        start = "2018-01-02",
+        end = "2021-07-30",
+        min = "2018-01-01",
+        max = "2023-12-31"
+      )
+    )
   })
   
 }
