@@ -169,7 +169,7 @@ bbri_dt_backtest <- bbri_dt_backtest %>%
   mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
   ungroup() %>% 
   select(-grp) %>%
-  as.data.frame()
+  as.data.frame() 
 
 bbri_dt_backtest <- bbri_dt_backtest %>% 
   mutate(
@@ -453,58 +453,58 @@ sido_analisa <- cbind(sido, sido_sma$SMA5, sido_sma$SMA15, sido_sma$SMA55, sido_
 colnames(sido_analisa) <- c("symbol", "date", "open", "high", "low", "close", "volume", "adjusted", "SMA5", "SMA15", "SMA55", "SMA80", "EMA5", "EMA30", "EMA55", "EMA60", "EMA10", "EMA15", "MACD", "RSI10", "RSI14", "RSI40", "RSI65", "decision.SMA", "decision.EMA", "decision.MACD", "decision.RSI")
 
 #MODEL DT
-# sido_suggestion <- sido_analisa[-(1:80),]
-# 
-# sido_model_dt <- readRDS("model/sido_dt.RDS")
-# 
-# sido_pred_dt <- predict(object = sido_model_dt, newdata = sido_analisa, type = "response")
-# 
-# sido_suggestion$pred_dt <- sido_pred_dt
+sido_suggestion <- sido_analisa[-(1:79),]
+
+sido_model_dt <- readRDS("model/sido_dt2.RDS")
+
+sido_pred_dt <- predict(object = sido_model_dt, newdata = sido_analisa, type = "response")
+
+sido_suggestion$pred_dt <- sido_pred_dt
 
 #P/L CALCULATION
-# sido_dt_backtest <- sido_suggestion %>% 
-#   filter(pred_dt != "Hold") %>% 
-#   select(c("date", "open", "close", "pred_dt")) %>% 
-#   mutate(
-#     stock_buy = case_when(
-#       pred_dt == "Buy" ~ "1",
-#       TRUE ~ "0"
-#     )
-#   )
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   group_by(grp = cumsum(stock_buy==0)) %>%
-#   mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>% 
-#   ungroup() %>% 
-#   select(-grp) %>%
-#   as.data.frame()
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   mutate(
-#     stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
-#   )
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   mutate(
-#     price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
-#   )
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   group_by(grp = cumsum(stock_buy==0)) %>%
-#   mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>% 
-#   ungroup() %>% 
-#   select(-grp) %>%
-#   as.data.frame()
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   mutate(
-#     avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
-#   )
-# 
-# sido_dt_backtest <- sido_dt_backtest %>% 
-#   mutate(
-#     profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
-#   )
+sido_dt_backtest <- sido_suggestion %>%
+  filter(pred_dt != "Hold") %>%
+  select(c("date", "open", "close", "pred_dt")) %>%
+  mutate(
+    stock_buy = case_when(
+      pred_dt == "Buy" ~ "1",
+      TRUE ~ "0"
+    )
+  )
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(total_stock = ifelse(stock_buy==1, lag(cumsum(stock_buy==1))+1,0)) %>%
+  ungroup() %>%
+  select(-grp) %>%
+  as.data.frame()
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  mutate(
+    stock_sell = ifelse(pred_dt == "Sell", lag(total_stock),0)
+  )
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  mutate(
+    price_stock_bought = ifelse(pred_dt == "Buy", open*100,0)
+  )
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  group_by(grp = cumsum(stock_buy==0)) %>%
+  mutate(commulative_stock_price = ifelse(stock_buy==1, cumsum(price_stock_bought),0)) %>%
+  ungroup() %>%
+  select(-grp) %>%
+  as.data.frame()
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  mutate(
+    avg_price = ifelse(pred_dt == "Sell", lag(commulative_stock_price)/stock_sell,0)
+  )
+
+sido_dt_backtest <- sido_dt_backtest %>%
+  mutate(
+    profit = ifelse(pred_dt == "Sell", (close*100 - avg_price)*stock_sell ,0)
+  )
 
 #-------------------------------------------------------------------------------
 

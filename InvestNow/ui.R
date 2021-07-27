@@ -261,21 +261,76 @@ navbarPage(
                               collapsible = T,
                               width = 3,
                               uiOutput("suggestion"))
+                                )
                               )
-                             )
-                           )
+                            )
                          ),
 
            # Tab Panel Portfolio - G/L Simulator---     
            tabPanel(title = "G/L Simulator",
                     fluidRow(
+                      useShinyjs(),
                       column(width = 12, uiOutput("text2")),
-                      box(width = 8, uiOutput("selection_comp")),
-                      column(width = 6, uiOutput("with_ml")),
-                      column(width = 6, uiOutput("wo_ml"))
+                      column(width = 12,
+                             br(),
+                             actionButton(inputId = 'bbri.jk2',
+                                          icon = icon("bank"),
+                                          label = strong('BBRI'),
+                                          style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                             actionButton(inputId = 'isat.jk2',
+                                          icon("phone"),
+                                          label = strong('ISAT'),
+                                          style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                             actionButton(inputId = 'sidomuncul2',
+                                          icon = icon("flask", class = "flask-box"),
+                                          label = strong('SIDO'),
+                                          style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                             actionButton(inputId = 'hokiberas2',
+                                          icon = icon("shopping-cart"),
+                                          label = strong('HOKI'),
+                                          style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                             actionButton(inputId = 'wijayakarya2',
+                                          icon = icon("road"),
+                                          label = strong('WIKA'),
+                                          style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                             align = "center",
+                             style = "margin-bottom: 10px;",
+                             style = "margin-top: -10px;",
+                             br()
+                      ),
+                      
+                      fluidPage(
+                        fluidRow(column(width = 12, uiOutput("text3"))),
+                        fluidRow(
+                          column(width = 4),
+                          column(width = 4, uiOutput("calender")),
+                          column(width = 4)
+                        ),
+                        fluidRow(
+                          box(
+                            collapsible = F,
+                            width = 6,
+                            uiOutput("comparison_with_ml")
+                            ),
+                          box(
+                            collapsible = F,
+                            width = 6,
+                            uiOutput("comparison_wo_ml"))
                         )
                       )
-                    ),
+                    )
+                  )
+                ),
 
 #------------------------------
 #NAV BAR TAB PANEL PROFILE---  
