@@ -82,30 +82,34 @@ function(input, output, session) {
   
   observeEvent(input$bbri.jk, {
     output$plot_output <- renderUI({
+      div(HTML(paste("<h4>PT. Bank Rakyat Indonesia (Persero) Tbk</h4>
+                     IDX: <a href= https://bri.co.id/investasi>BBRI.JK</a>")),
+      br(),br(),
       tabsetPanel(
         id="bbri_plot",
         type = "tabs",
-        tabPanel("Basic - Line Chart", withSpinner(plotlyOutput("bri"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
+        tabPanel("Basic - Line Chart", 
+                 span(textOutput("price_bbri"), style = "font-size: 25px"), 
+                 textOutput("date_bbri"), 
+                 withSpinner(plotlyOutput("bri"), type = 8,size = 0.5, color = "gray")),
+        tabPanel("Advance - Candlestick Chart", 
+                 span(textOutput("price_bbri2"), style = "font-size: 25px"), 
+                 textOutput("date_bbri2"), 
+                 withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
+        )
       )
     })
     
     output$suggestion <- renderUI({
-      div(
-        HTML(
-          paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u>
-                 <br>")),
+      div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
         valueBoxOutput(outputId = "prediction_result_bbri", width = 12),
         hr(),
-        HTML(
-          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
-                 <br>")),
-        valueBoxOutput(outputId = "bbri_ta_sma", width = 12),
-        valueBoxOutput(outputId = "bbri_ta_ema", width = 12),
-        valueBoxOutput(outputId = "bbri_ta_macd", width = 12),
-        valueBoxOutput(outputId = "bbri_ta_rsi", width = 12),
-        div(
-          style = "position: absolute; left: 10em;",
+        HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
+        withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+        div(style = "position: absolute; left: 10em;",
         dropdownButton(right = TRUE,
                        size = "sm",
                        circle = FALSE,
@@ -116,6 +120,21 @@ function(input, output, session) {
     })
     
   }, ignoreNULL = FALSE)
+  
+  bbri_reac <- reactive({bbri})
+  
+  bbri2 <- bbri
+  bbri2$close <- format(round(as.numeric(bbri2$close), 1), nsmall=1, big.mark=",")
+  bbri2$close <- paste("Rp.", bbri2$close)
+  bbri_reac2 <- reactive({bbri2})
+  
+  output$date_bbri <- renderText(as.character(max(bbri_reac()$date,na.rm = TRUE)))
+  
+  output$price_bbri <- renderText(as.character(max(bbri_reac2()$close,na.rm = TRUE)))
+  
+  output$date_bbri2 <- renderText(as.character(max(bbri_reac()$date,na.rm = TRUE)))
+  
+  output$price_bbri2 <- renderText(as.character(max(bbri_reac2()$close,na.rm = TRUE)))
   
   output$prediction_result_bbri <- renderValueBox({
     
@@ -184,28 +203,35 @@ function(input, output, session) {
   
   observeEvent(input$isat.jk, {
     output$plot_output <- renderUI({
+      div(HTML(paste("<h4>PT. Indosat Tbk</h4>
+                     IDX: <a href= https://indosatooredoo.com/portal/en/corplanding>ISAT.JK</a>")),
+          br(),br(),
       tabsetPanel(
         id="isat_plot",
         type = "tabs",
-        tabPanel("Basic - Line Chart", withSpinner(plotlyOutput("indosat"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", withSpinner(plotlyOutput("indosat_adv"), type = 8,size = 0.5, color = "gray"))
+        tabPanel("Basic - Line Chart", 
+                 span(textOutput("price_isat"), style = "font-size: 25px"), 
+                 textOutput("date_isat"), 
+                 withSpinner(plotlyOutput("indosat"), type = 8,size = 0.5, color = "gray")),
+        tabPanel("Advance - Candlestick Chart", 
+                 span(textOutput("price_isat2"), style = "font-size: 25px"), 
+                 textOutput("date_isat2"), 
+                 withSpinner(plotlyOutput("indosat_adv"), type = 8,size = 0.5, color = "gray"))
+        )
       )
     })
     
     output$suggestion <- renderUI({
-      div(
-        HTML(
-          paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u>
-                 <br>")),
-        valueBoxOutput(outputId = "prediction_result_isat", width = 12),
+      div(HTML(paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u><br>")),
+        withSpinner(valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        valueBoxOutput(outputId = "isat_ta_sma", width = 12),
-        valueBoxOutput(outputId = "isat_ta_ema", width = 12),
-        valueBoxOutput(outputId = "isat_ta_macd", width = 12),
-        valueBoxOutput(outputId = "isat_ta_rsi", width = 12),
+        withSpinner(valueBoxOutput(outputId = "isat_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "isat_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "isat_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "isat_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
         dropdownButton(right = TRUE,
                        size = "sm",
                        circle = FALSE,
@@ -215,6 +241,21 @@ function(input, output, session) {
     })
     
   })
+  
+  isat_reac <- reactive({isat})
+  
+  isat2 <- isat
+  isat2$close <- format(round(as.numeric(isat2$close), 1), nsmall=1, big.mark=",")
+  isat2$close <- paste("Rp.", isat2$close)
+  isat_reac2 <- reactive({isat2})
+  
+  output$date_isat <- renderText(as.character(max(isat_reac()$date,na.rm = TRUE)))
+  
+  output$price_isat <- renderText(as.character(max(isat_reac2()$close,na.rm = TRUE)))
+  
+  output$date_isat2 <- renderText(as.character(max(isat_reac()$date,na.rm = TRUE)))
+  
+  output$price_isat2 <- renderText(as.character(max(isat_reac2()$close,na.rm = TRUE)))
   
   output$prediction_result_isat <- renderValueBox({
     
@@ -283,28 +324,35 @@ function(input, output, session) {
   
   observeEvent(input$sidomuncul, {
     output$plot_output <- renderUI({
+      div(HTML(paste("<h4>PT. Industri Jamu Dan Farmasi Sido Muncul Tbk</h4>
+                     IDX: <a href= https://investor.sidomuncul.co.id/id/understanding_sido.html>SIDO.JK</a>")),
+      br(),br(),
       tabsetPanel(
         id="sido_plot",
         type = "tabs",
-        tabPanel("Basic - Line Chart", withSpinner(plotlyOutput("sido"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", withSpinner(plotlyOutput("sido_adv"), type = 8,size = 0.5, color = "gray"))
+        tabPanel("Basic - Line Chart", 
+                 span(textOutput("price_sido"), style = "font-size: 25px"), 
+                 textOutput("date_sido"), 
+                 withSpinner(plotlyOutput("sido"), type = 8,size = 0.5, color = "gray")),
+        tabPanel("Advance - Candlestick Chart", 
+                 span(textOutput("price_sido2"), style = "font-size: 25px"), 
+                 textOutput("date_sido2"), 
+                 withSpinner(plotlyOutput("sido_adv"), type = 8,size = 0.5, color = "gray"))
+        )
       )
     })
     
     output$suggestion <- renderUI({
-      div(
-        HTML(
-          paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u>
-                 <br>")),
-        valueBoxOutput(outputId = "prediction_result_sido", width = 12),
+      div(HTML(paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u><br>")),
+        withSpinner(valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        valueBoxOutput(outputId = "sido_ta_sma", width = 12),
-        valueBoxOutput(outputId = "sido_ta_ema", width = 12),
-        valueBoxOutput(outputId = "sido_ta_macd", width = 12),
-        valueBoxOutput(outputId = "sido_ta_rsi", width = 12),
+        withSpinner(valueBoxOutput(outputId = "sido_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
         dropdownButton(right = TRUE,
                        size = "sm",
                        circle = FALSE,
@@ -314,6 +362,21 @@ function(input, output, session) {
     })
     
   })
+  
+  sido_reac <- reactive({sido})
+  
+  sido2 <- sido
+  sido2$close <- format(round(as.numeric(sido2$close), 1), nsmall=1, big.mark=",")
+  sido2$close <- paste("Rp.", sido2$close)
+  sido_reac2 <- reactive({sido2})
+  
+  output$date_sido <- renderText(as.character(max(sido_reac()$date,na.rm = TRUE)))
+  
+  output$price_sido <- renderText(as.character(max(sido_reac2()$close,na.rm = TRUE)))
+  
+  output$date_sido2 <- renderText(as.character(max(sido_reac()$date,na.rm = TRUE)))
+  
+  output$price_sido2 <- renderText(as.character(max(sido_reac2()$close,na.rm = TRUE)))
   
   output$prediction_result_sido <- renderValueBox({
     
@@ -382,32 +445,54 @@ function(input, output, session) {
   
   observeEvent(input$hokiberas, {
     output$plot_output <- renderUI({
+      div(HTML(paste("<h4>PT. Buyung Poetra Sembada Tbk</h4>
+                     IDX: <a href= https://topikoki.com/about-us-en-translation/>HOKIX.JK</a>")),
+          br(),br(),
       tabsetPanel(
         id="hoki_plot",
         type = "tabs",
-        tabPanel("Basic - Line Chart", withSpinner(plotlyOutput("hoki"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", withSpinner(plotlyOutput("hoki_adv"), type = 8,size = 0.5, color = "gray"))
+        tabPanel("Basic - Line Chart", 
+                 span(textOutput("price_hoki"), style = "font-size: 25px"), 
+                 textOutput("date_hoki"), 
+                 withSpinner(plotlyOutput("hoki"), type = 8,size = 0.5, color = "gray")),
+        tabPanel("Advance - Candlestick Chart", 
+                 span(textOutput("price_hoki2"), style = "font-size: 25px"), 
+                 textOutput("date_hoki2"), 
+                 withSpinner(plotlyOutput("hoki_adv"), type = 8,size = 0.5, color = "gray"))
+        )
       )
     })
     
     output$suggestion <- renderUI({
-      div(
-        HTML(
-          paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u>
-                 <br>")),
-        valueBoxOutput(outputId = "prediction_result_hoki", width = 12),
+      div(HTML(paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u><br>")),
+        withSpinner(valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        valueBoxOutput(outputId = "hoki_ta_sma", width = 12),
-        valueBoxOutput(outputId = "hoki_ta_ema", width = 12),
-        valueBoxOutput(outputId = "hoki_ta_macd", width = 12),
-        valueBoxOutput(outputId = "hoki_ta_rsi", width = 12)
+        withSpinner(valueBoxOutput(outputId = "hoki_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray")
       )
     })
     
   })
+  
+  hoki_reac <- reactive({hoki})
+  
+  hoki2 <- hoki
+  hoki2$close <- format(round(as.numeric(hoki2$close), 1), nsmall=1, big.mark=",")
+  hoki2$close <- paste("Rp.", hoki2$close)
+  hoki_reac2 <- reactive({hoki2})
+  
+  output$date_hoki <- renderText(as.character(max(hoki_reac()$date,na.rm = TRUE)))
+  
+  output$price_hoki <- renderText(as.character(max(hoki_reac2()$close,na.rm = TRUE)))
+  
+  output$date_hoki2 <- renderText(as.character(max(hoki_reac()$date,na.rm = TRUE)))
+  
+  output$price_hoki2 <- renderText(as.character(max(hoki_reac2()$close,na.rm = TRUE)))
   
   output$prediction_result_hoki <- renderValueBox({
     
@@ -476,28 +561,35 @@ function(input, output, session) {
   
   observeEvent(input$wijayakarya, {
     output$plot_output <- renderUI({
+      div(HTML(paste("<h4>PT. Wijaya Karya (Persero) Tbk</h4>
+                     IDX: <a href= https://wika.co.id/id/#>WIKA.JK</a>")),
+          br(),br(),
       tabsetPanel(
         id="wika_plot",
         type = "tabs",
-        tabPanel("Basic - Line Chart", withSpinner(plotlyOutput("wika"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", withSpinner(plotlyOutput("wika_adv"), type = 8,size = 0.5, color = "gray"))
+        tabPanel("Basic - Line Chart", 
+                 span(textOutput("price_wika"), style = "font-size: 25px"), 
+                 textOutput("date_wika"), 
+                 withSpinner(plotlyOutput("wika"), type = 8,size = 0.5, color = "gray")),
+        tabPanel("Advance - Candlestick Chart", 
+                 span(textOutput("price_wika2"), style = "font-size: 25px"), 
+                 textOutput("date_wika2"), 
+                 withSpinner(plotlyOutput("wika_adv"), type = 8,size = 0.5, color = "gray"))
+        )
       )
     })
     
     output$suggestion <- renderUI({
-      div(
-        HTML(
-          paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u>
-                 <br>")),
-        valueBoxOutput(outputId = "prediction_result_wika", width = 12),
+      div(HTML(paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u><br>")),
+        withSpinner(valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        valueBoxOutput(outputId = "wika_ta_sma", width = 12),
-        valueBoxOutput(outputId = "wika_ta_ema", width = 12),
-        valueBoxOutput(outputId = "wika_ta_macd", width = 12),
-        valueBoxOutput(outputId = "wika_ta_rsi", width = 12),
+        withSpinner(valueBoxOutput(outputId = "wika_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "wika_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "wika_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(valueBoxOutput(outputId = "wika_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
         dropdownButton(right = TRUE,
                        size = "sm",
                        circle = FALSE,
@@ -507,6 +599,21 @@ function(input, output, session) {
     })
     
   })
+  
+  wika_reac <- reactive({wika})
+  
+  wika2 <- wika
+  wika2$close <- format(round(as.numeric(wika2$close), 1), nsmall=1, big.mark=",")
+  wika2$close <- paste("Rp.", wika2$close)
+  wika_reac2 <- reactive({wika2})
+  
+  output$date_wika <- renderText(as.character(max(wika_reac()$date,na.rm = TRUE)))
+  
+  output$price_wika <- renderText(as.character(max(wika_reac2()$close,na.rm = TRUE)))
+  
+  output$date_wika2 <- renderText(as.character(max(wika_reac()$date,na.rm = TRUE)))
+  
+  output$price_wika2 <- renderText(as.character(max(wika_reac2()$close,na.rm = TRUE)))
   
   output$prediction_result_wika <- renderValueBox({
     
@@ -578,29 +685,67 @@ function(input, output, session) {
   observeEvent(input$bbri.jk, {
     output$bri <- renderPlotly({
 
-      bbri_mutate <- bbri %>%
-        mutate(label = glue(
-          "Date: {date}
-           Price: {close}"
-        ))
-
-      bbri_plot <- ggplot(data = bbri_mutate,
-                          mapping = aes(
-                            x = date,
-                            y = close,
-                            text = label,
-                            group = 1
-                          )) +
-        geom_line(color = "#69b3a2")+
-        geom_area(fill="#69b3a2", alpha=0.5) +
-        labs(title = "BBRI",
-             subtitle = "",
-             x = "Date",
-             y = "Price (Rp)") +
-        theme_ipsum()
-
-      bbri_plotly <- ggplotly(bbri_plot, tooltip = "label")
-      bbri_plotly
+      bbri_area_ploty <- bbri %>%
+        plot_ly(x = ~date,
+                y = ~close,
+                type = 'scatter', 
+                mode = 'lines', 
+                fill = 'tozeroy',
+                fillcolor = 'rgba(0,100,80,0.5)',
+                line = list(color = 'rgba(0,100,80,1)'),
+                name = "Price (Rp)",
+                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+                hoverinfo = 'text') %>%
+        layout(
+          xaxis = list(
+            title = "Day", 
+            zeroline = F,
+            rangeselector = list( 
+              buttons = list(
+                list(
+                  count = 1,
+                  label = "1 Day",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 5,
+                  label = "5 Days",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Month",
+                  step = "week",
+                  stepmode = "backward"),
+                list(
+                  count = 3,
+                  label = "3 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 6,
+                  label = "6 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Year",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  count = 2,
+                  label = "2 Years",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  label = "Max",
+                  step = "all"))),
+            rangeslider = list(visible = FALSE)),
+          yaxis = list(title = "Price (Rp)",
+                       showgrid = TRUE,
+                       showticklabels = TRUE))
+      
+      bbri_area_ploty
     })
   })
 
@@ -682,33 +827,67 @@ function(input, output, session) {
   observeEvent(input$isat.jk, {
     output$indosat <- renderPlotly({
 
-      isat_mutate <- isat %>%
-        mutate(label = glue(
-          "
-    Date: {date}
-    Price: {close}
-    "
-        ))
-
-      #Membuat line plot
-      isat_plot <- ggplot(data = isat_mutate,
-                          mapping = aes(
-                            x = date,
-                            y = close,
-                            text = label,
-                            group = 1
-                          )) +
-        geom_line(color = "#69b3a2")+
-        geom_area(fill="#69b3a2", alpha=0.5) +
-        labs(title = "ISAT",
-             subtitle = "",
-             x = "Date",
-             y = "Price (Rp)") +
-        theme_ipsum()
-
-      #Megubah dari plot biasa menjadi plotly agar lebih informatif
-      isat_plotly <- ggplotly(isat_plot, tooltip = "label")
-      isat_plotly
+      isat_area_ploty <- isat %>%
+        plot_ly(x = ~date,
+                y = ~close,
+                type = 'scatter', 
+                mode = 'lines', 
+                fill = 'tozeroy',
+                fillcolor = 'rgba(0,100,80,0.5)',
+                line = list(color = 'rgba(0,100,80,1)'),
+                name = "Price (Rp)",
+                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+                hoverinfo = 'text') %>%
+        layout(
+          xaxis = list(
+            title = "Day", 
+            zeroline = F,
+            rangeselector = list( 
+              buttons = list(
+                list(
+                  count = 1,
+                  label = "1 Day",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 5,
+                  label = "5 Days",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Month",
+                  step = "week",
+                  stepmode = "backward"),
+                list(
+                  count = 3,
+                  label = "3 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 6,
+                  label = "6 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Year",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  count = 2,
+                  label = "2 Years",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  label = "Max",
+                  step = "all"))),
+            rangeslider = list(visible = FALSE)),
+          yaxis = list(title = "Price (Rp)",
+                       showgrid = TRUE,
+                       showticklabels = TRUE))
+      
+      isat_area_ploty
 
     })
   })
@@ -792,33 +971,67 @@ function(input, output, session) {
   observeEvent(input$sidomuncul, {
     output$sido <- renderPlotly({
 
-      sido_mutate <- sido %>%
-        mutate(label = glue(
-          "
-    Date: {date}
-    Price: {close}
-    "
-        ))
-
-      #Membuat line plot
-      sido_plot <- ggplot(data = sido_mutate,
-                          mapping = aes(
-                            x = date,
-                            y = close,
-                            text = label,
-                            group = 1
-                          )) +
-        geom_line(color = "#69b3a2")+
-        geom_area(fill="#69b3a2", alpha=0.5) +
-        labs(title = "SIDO",
-             subtitle = "",
-             x = "Date",
-             y = "Price (Rp)") +
-        theme_ipsum()
-
-      #Megubah dari plot biasa menjadi plotly agar lebih informatif
-      sido_plotly <- ggplotly(sido_plot, tooltip = "label")
-      sido_plotly
+      sido_area_ploty <- sido %>%
+        plot_ly(x = ~date,
+                y = ~close,
+                type = 'scatter', 
+                mode = 'lines', 
+                fill = 'tozeroy',
+                fillcolor = 'rgba(0,100,80,0.5)',
+                line = list(color = 'rgba(0,100,80,1)'),
+                name = "Price (Rp)",
+                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+                hoverinfo = 'text') %>%
+        layout(
+          xaxis = list(
+            title = "Day", 
+            zeroline = F,
+            rangeselector = list( 
+              buttons = list(
+                list(
+                  count = 1,
+                  label = "1 Day",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 5,
+                  label = "5 Days",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Month",
+                  step = "week",
+                  stepmode = "backward"),
+                list(
+                  count = 3,
+                  label = "3 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 6,
+                  label = "6 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Year",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  count = 2,
+                  label = "2 Years",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  label = "Max",
+                  step = "all"))),
+            rangeslider = list(visible = FALSE)),
+          yaxis = list(title = "Price (Rp)",
+                       showgrid = TRUE,
+                       showticklabels = TRUE))
+      
+      sido_area_ploty
 
     })
   })
@@ -902,33 +1115,67 @@ function(input, output, session) {
   observeEvent(input$hokiberas, {
     output$hoki <- renderPlotly({
 
-      hoki_mutate <- hoki %>%
-        mutate(label = glue(
-          "
-    Date: {date}
-    Price: {close}
-    "
-        ))
-
-      #Membuat line plot
-      hoki_plot <- ggplot(data = hoki_mutate,
-                          mapping = aes(
-                            x = date,
-                            y = close,
-                            text = label,
-                            group = 1
-                          )) +
-        geom_line(color = "#69b3a2")+
-        geom_area(fill="#69b3a2", alpha=0.5) +
-        labs(title = "HOKI",
-             subtitle = "",
-             x = "Date",
-             y = "Price (Rp)") +
-        theme_ipsum()
-
-      #Megubah dari plot biasa menjadi plotly agar lebih informatif
-      hoki_plotly <- ggplotly(hoki_plot, tooltip = "label")
-      hoki_plotly
+      hoki_area_ploty <- hoki %>%
+        plot_ly(x = ~date,
+                y = ~close,
+                type = 'scatter', 
+                mode = 'lines', 
+                fill = 'tozeroy',
+                fillcolor = 'rgba(0,100,80,0.5)',
+                line = list(color = 'rgba(0,100,80,1)'),
+                name = "Price (Rp)",
+                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+                hoverinfo = 'text') %>%
+        layout(
+          xaxis = list(
+            title = "Day", 
+            zeroline = F,
+            rangeselector = list( 
+              buttons = list(
+                list(
+                  count = 1,
+                  label = "1 Day",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 5,
+                  label = "5 Days",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Month",
+                  step = "week",
+                  stepmode = "backward"),
+                list(
+                  count = 3,
+                  label = "3 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 6,
+                  label = "6 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Year",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  count = 2,
+                  label = "2 Years",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  label = "Max",
+                  step = "all"))),
+            rangeslider = list(visible = FALSE)),
+          yaxis = list(title = "Price (Rp)",
+                       showgrid = TRUE,
+                       showticklabels = TRUE))
+      
+      hoki_area_ploty
 
     })
   })
@@ -1013,33 +1260,68 @@ function(input, output, session) {
   observeEvent(input$wijayakarya, {
     output$wika <- renderPlotly({
 
-      wika_mutate <- wika %>%
-        mutate(label = glue(
-          "
-    Date: {date}
-    Price: {close}
-    "
-        ))
-
-      #Membuat line plot
-      wika_plot <- ggplot(data = wika_mutate,
-                          mapping = aes(
-                            x = date,
-                            y = close,
-                            text = label,
-                            group = 1
-                          )) +
-        geom_line(color = "#69b3a2")+
-        geom_area(fill="#69b3a2", alpha=0.5) +
-        labs(title = "WIKA",
-             subtitle = "",
-             x = "Date",
-             y = "Price (Rp)") +
-        theme_ipsum()
-
-      #Megubah dari plot biasa menjadi plotly agar lebih informatif
-      wika_plotly <- ggplotly(wika_plot, tooltip = "label")
-      wika_plotly
+      wika_area_ploty <- wika %>%
+        plot_ly(x = ~date,
+                y = ~close,
+                type = 'scatter', 
+                mode = 'lines', 
+                fill = 'tozeroy',
+                fillcolor = 'rgba(0,100,80,0.5)',
+                line = list(color = 'rgba(0,100,80,1)'),
+                name = "Price (Rp)",
+                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+                hoverinfo = 'text') %>%
+        layout(
+          xaxis = list(
+            title = "Day", 
+            zeroline = F,
+            rangeselector = list( 
+              buttons = list(
+                list(
+                  count = 1,
+                  label = "1 Day",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 5,
+                  label = "5 Days",
+                  step = "day",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Month",
+                  step = "week",
+                  stepmode = "backward"),
+                list(
+                  count = 3,
+                  label = "3 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 6,
+                  label = "6 Months",
+                  step = "month",
+                  stepmode = "backward"),
+                list(
+                  count = 1,
+                  label = "1 Year",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  count = 2,
+                  label = "2 Years",
+                  step = "year",
+                  stepmode = "backward"),
+                list(
+                  label = "Max",
+                  step = "all"))),
+            rangeslider = list(visible = FALSE)),
+          yaxis = list(title = "Price (Rp)",
+                       zeroline = FALSE,
+                       showgrid = TRUE,
+                       showticklabels = TRUE))
+      
+      wika_area_ploty
 
     })
 
