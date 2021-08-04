@@ -1,6 +1,14 @@
 #NAV BAR---
 introjsUI()
-
+theme <- bslib::bs_theme(version = 4)
+fluidPage(
+  list(tags$head(HTML('<link rel="icon", href="MyIcon.png", 
+                                   type="image/png" />'))),
+  div(style="padding: 1px 0px; width: '100%'",
+      titlePanel(
+        title="", windowTitle="InvestNow"
+      )
+  ),
 navbarPage(
           #Title---
           title = div(img(src="stock-market.png", 
@@ -19,7 +27,6 @@ navbarPage(
            id = "inTabset",
           
           header = tagList(useShinydashboard()),
-          
           
 #------------------------------
 #NAV BAR MENU PANEL ABOUT PAGE---   
@@ -123,15 +130,13 @@ navbarPage(
                                      border-size:15px",
                               HTML(
                                 paste("
-                                      <b><center><u>TECHNICAL ANALYSIS</b></center></u>
-                                      <br>
-                                      Affraid to invest in stock because do not understand about technical analysis? Affraid no more since
-                                      InvestNow assistance are based on four technical analysis to provide much better and trustworthy suggestion. 
-                                      These are the four technical indicators implemented by InvestNow:
-                                      <br><b>- Simple Moving Average (SMA)</b>
-                                      <br><b>- Exponential Moving Average (EMA) </b>
-                                      <br><b>- Moving Average Convergence Divergence (MACD) </b>
-                                      <br><b>- Relative Strength Index (RSI) </b>
+                                      <b><center><u>EXPERT SYSTEM</b></center></u>
+                                      <br> InvestoNow mission is to provide trustworthy suggestion to investors and in order to fulfill that mission InvestoNow implemented Expert System.
+                                      <br><br>An expert system is a system to simulate the judgment and behavior of a human or an organization that has expert knowledge and experience in a particular 
+                                      field, in this case scenario InvestNow hired experienced stock analys to provide suggestion when is the right time to buy or sell a stock based on several 
+                                      technical analysis.
+                                      The suggestion which based on technical analysis will be used as a data train to the system, in this case the system is a machine learning model. Not just to
+                                      train the machine learning model, it can also be used to improve their performance based on experience, just as humans do.
                                       "
                                       )
                                     )
@@ -142,10 +147,10 @@ navbarPage(
                           # Image part
                           column(
                             br(), br(),
-                            tags$img(src="technical-analysis.png",
+                            tags$img(src="ml.png",
                                      width="200px",
                                      height="200px"),
-                            br(), br(),
+                            br(),
                             actionButton(inputId = 'jumpToTrading2', 
                                          label = strong('InvestNow'),
                                          style = "color: black; 
@@ -161,10 +166,10 @@ navbarPage(
                           column(
                             br(),
                             # Image Part
-                            tags$img(src="ml.png",
+                            tags$img(src="technical-analysis.png",
                                      width="200px",
                                      height="200px"),
-                            br(),
+                            br(), br(),
                             actionButton(inputId = 'jumpToTrading3', 
                                          label = strong('InvestNow'),
                                          style = "color: black; 
@@ -190,15 +195,67 @@ navbarPage(
                                      border-radius:10px;
                                      border-size:15px",
                               HTML(
-                                paste("<b><center><u>MACHINE LEARNING</b></center></u>
-                                      <br> There are two variant of machine learning InvestNow offered to the investor to be used to provied suggestion. <br><b>- Decistion Tree Model</b><br><b>- Random Forest Model</b>
-                                      <br><br>With two variation of machine learning model, investors are given the freedom to choose what model they feel gives the best suggestion for themselves
+                                paste("<b><center><u>TECHNICAL ANALYSIS</b></center></u>
+                                      <br>
+                                      Affraid to invest in stock because do not understand about technical analysis? Affraid no more since
+                                      InvestNow assistance are based on four technical analysis to provide much better and trustworthy suggestion. 
+                                      These are the four technical indicators implemented by InvestNow:
+                                      <br><b>- Simple Moving Average (SMA)</b>
+                                      <br><b>- Exponential Moving Average (EMA) </b>
+                                      <br><b>- Moving Average Convergence Divergence (MACD) </b>
+                                      <br><b>- Relative Strength Index (RSI) </b>
                                       "
                                       )
                                     )
                                   ),
                             width = 10
-                          )
+                          ),
+                          
+                          # Text & Image Technical Analysis
+                          # Text part
+                          column(
+                            hr(),
+                            br(),
+                            div(
+                              style="text-align:justify;
+                                     font-size: 15px;
+                                     color:black;
+                                     background-color: whitesmoke ;
+                                     border-color:black;
+                                     padding:15px;
+                                     border-radius:10px;
+                                     border-size:15px",
+                              HTML(
+                                paste("
+                                      <b><center><u>MACHINE LEARNING</b></center></u>
+                                      <br> The final suggestion InvestNow provided to the investor is s the result of machine learning based on technical analysis data from experience stock analysis.
+                                      The machine learning model used in InvestNow is called <b>Decision Tree</b>, it is a classificaiton model to classifty whether today is it the right time for the investor
+                                      to open position, close the position or keep passtion until the right time.
+                                      <br><br>Hopefully with the help of machine learning, InvestNow can provide much better and trustworthy suggestion to the investors to decide when is the right time to invest in stock in order gain maximum profit.
+                                      "
+                                )
+                              )
+                            ),
+                            width = 10
+                          ),
+                          
+                          column(
+                            br(),br(),
+                            # Image Part
+                            tags$img(src="ml_logo.png",
+                                     width="150px",
+                                     height="150px"),
+                            br(), br(),
+                            actionButton(inputId = 'jumpToTrading4', 
+                                         label = strong('InvestNow'),
+                                         style = "color: black; 
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                            align = "center",
+                            style = "margin-bottom: 10px;",
+                            style = "margin-top: -10px;",
+                            width = 2
+                          ),
                         )
                       )
                     ),
@@ -318,14 +375,25 @@ navbarPage(
                         ),
                         fluidRow(
                           box(
-                            collapsible = F,
+                            collapsible = T,
                             width = 6,
                             uiOutput("comparison_with_ml")
                             ),
                           box(
-                            collapsible = F,
+                            collapsible = T,
                             width = 6,
-                            uiOutput("comparison_wo_ml"))
+                            uiOutput("comparison_wo_ml")
+                            ),
+                          box(
+                            collapsible = T,
+                            width = 6,
+                            uiOutput("history_with_ml")
+                          ),
+                          box(
+                            collapsible = T,
+                            width = 6,
+                            uiOutput("history_wo_ml")
+                          )
                         )
                       )
                     )
@@ -334,16 +402,16 @@ navbarPage(
 
 #------------------------------
 #NAV BAR TAB PANEL PROFILE---  
-           tabPanel(title = "Profile",
-                    "Profile"),
+           # tabPanel(title = "Profile",
+           #          "Profile"),
 
 #------------------------------
 #FOOTER--- 
 div(class = "footer",
     includeHTML("html/footer2.Rhtml")
+    )
   )
 )
-
 
 
 

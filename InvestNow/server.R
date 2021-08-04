@@ -9,7 +9,8 @@ function(input, output, session) {
     imgs <- list.files("www/home", 
                        pattern=".jpg", 
                        full.names = TRUE)
-    slickR(imgs)
+    slickR(imgs) + 
+      settings(dots = TRUE, autoplay = TRUE)
   })
   
   # Output render image About - Home---
@@ -60,6 +61,13 @@ function(input, output, session) {
                       selected = "trading")
   })
   
+  # Output action button 3 to go to second tab---
+  observeEvent(input$jumpToTrading4, {
+    updateTabsetPanel(session = session, 
+                      inputId = "inTabset",
+                      selected = "trading")
+  })
+  
 #------------------------------  
 #NAV BAR TAB PANEL PORTFOLIO-TRADING ASSISTANCE---    
   
@@ -102,28 +110,35 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
+          tags$head(tags$style(HTML(".small-box {height: 95px}"))),
         valueBoxOutput(outputId = "prediction_result_bbri", width = 12),
+        dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
+          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
         hr(),
         HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
         withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        div(style = "position: absolute; left: 10em;",
-        dropdownButton(right = TRUE,
-                       size = "sm",
-                       circle = FALSE,
-                       icon = icon("gear"),
-                       up = F,
-                       tooltip = tooltipOptions(title = "Additional Information!")))
+        div(#style = "position: absolute; left: 10em;",
+        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
         )
     })
-    
-  }, ignoreNULL = FALSE)
+  }, ignoreNULL = FALSE, ignoreInit = FALSE, once = F)
   
-  bbri_reac <- reactive({bbri})
+  output$acc_bbri <- renderValueBox({
+
+    valueBox(color = "black",
+             value = "97.67%",
+             subtitle = "",
+             icon = tags$i(icon("tasks"), style = "font-size: 50px")
+    )
+  })
   
-  bbri2 <- bbri
+  bbri_reac <- reactive({bbri %>% tail(1)})
+  
+  bbri2 <- bbri %>% tail(1)
   bbri2$close <- format(round(as.numeric(bbri2$close), 1), nsmall=1, big.mark=",")
   bbri2$close <- paste("Rp.", bbri2$close)
   bbri_reac2 <- reactive({bbri2})
@@ -143,7 +158,7 @@ function(input, output, session) {
       tail(1)
     
     valueBox(color = ifelse(fnl_sug_bbri == "Buy", "green", ifelse(fnl_sug_bbri == "Sell", "red", "yellow")),
-             value = tags$p(fnl_sug_bbri, style = "font-size: 50%"),
+             value = fnl_sug_bbri,
              subtitle = "Machine Learning Suggestion",
              icon = tags$i(icon("balance-scale"), style = "font-size: 50px")
              )
@@ -156,7 +171,7 @@ function(input, output, session) {
       tail(1)
     
     valueBox(color = ifelse(sug_bbri_sma == "Buy", "green", ifelse(sug_bbri_sma == "Sell", "red", "yellow")),
-             value = tags$p(sug_bbri_sma, style = "font-size: 50%"),
+             value = sug_bbri_sma,
              subtitle = "SMA Analysis",
              icon = tags$i(icon("tasks"), style = "font-size: 50px")
     )
@@ -169,7 +184,7 @@ function(input, output, session) {
       tail(1)
     
     valueBox(color = ifelse(sug_bbri_ema == "Buy", "green", ifelse(sug_bbri_ema == "Sell", "red", "yellow")),
-             value = tags$p(sug_bbri_ema, style = "font-size: 50%"),
+             value = sug_bbri_ema,
              subtitle = "EMA Analysis",
              icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
@@ -182,7 +197,7 @@ function(input, output, session) {
       tail(1)
     
     valueBox(color = ifelse(sug_bbri_macd == "Buy", "green", ifelse(sug_bbri_macd == "Sell", "red", "yellow")),
-             value = tags$p(sug_bbri_macd, style = "font-size: 50%"),
+             value = sug_bbri_macd,
              subtitle = "MACD Analysis",
              icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
@@ -200,6 +215,8 @@ function(input, output, session) {
              icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
+  
+  output$acc_bbri <- renderText("Accuracy: 97.67%")
   
   observeEvent(input$isat.jk, {
     output$plot_output <- renderUI({
@@ -223,7 +240,10 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(
+          valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 98.60% </b></center>")),
+                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -232,19 +252,16 @@ function(input, output, session) {
         withSpinner(valueBoxOutput(outputId = "isat_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "isat_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "isat_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(right = TRUE,
-                       size = "sm",
-                       circle = FALSE,
-                       icon = icon("gear"),
-                       tooltip = tooltipOptions(title = "Additional Information!"))
+        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
   })
   
-  isat_reac <- reactive({isat})
+  isat_reac <- reactive({isat %>% tail(1)})
   
-  isat2 <- isat
+  isat2 <- isat %>% tail(1)
   isat2$close <- format(round(as.numeric(isat2$close), 1), nsmall=1, big.mark=",")
   isat2$close <- paste("Rp.", isat2$close)
   isat_reac2 <- reactive({isat2})
@@ -266,7 +283,7 @@ function(input, output, session) {
     valueBox(color = ifelse(fnl_sug_isat == "Buy", "green", ifelse(fnl_sug_isat == "Sell", "red", "yellow")),
              value = fnl_sug_isat,
              subtitle = "Machine Learning Suggestion",
-             icon = icon("balance-scale")
+             icon = tags$i(icon("balance-scale", style = "font-size: 50px"))
     )
   })
   
@@ -279,7 +296,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_isat_sma == "Buy", "green", ifelse(sug_isat_sma == "Sell", "red", "yellow")),
              value = sug_isat_sma,
              subtitle = "SMA Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -292,7 +309,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_isat_ema == "Buy", "green", ifelse(sug_isat_ema == "Sell", "red", "yellow")),
              value = sug_isat_ema,
              subtitle = "EMA Analysis",
-             icon = icon("tasks")
+             tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -305,7 +322,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_isat_macd == "Buy", "green", ifelse(sug_isat_macd == "Sell", "red", "yellow")),
              value = sug_isat_macd,
              subtitle = "MACD Analysis",
-             icon = icon("tasks")
+             tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -318,7 +335,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_isat_rsi == "Buy", "green", ifelse(sug_isat_rsi == "Sell", "red", "yellow")),
              value = sug_isat_rsi,
              subtitle = "RSI Analysis",
-             icon = icon("tasks")
+             tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -344,7 +361,10 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(
+          valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 96.41% </b></center>")),
+                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -353,19 +373,16 @@ function(input, output, session) {
         withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(right = TRUE,
-                       size = "sm",
-                       circle = FALSE,
-                       icon = icon("gear"),
-                       tooltip = tooltipOptions(title = "Additional Information!"))
+        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
   })
   
-  sido_reac <- reactive({sido})
+  sido_reac <- reactive({sido %>% tail(1)})
   
-  sido2 <- sido
+  sido2 <- sido %>% tail(1)
   sido2$close <- format(round(as.numeric(sido2$close), 1), nsmall=1, big.mark=",")
   sido2$close <- paste("Rp.", sido2$close)
   sido_reac2 <- reactive({sido2})
@@ -387,7 +404,7 @@ function(input, output, session) {
     valueBox(color = ifelse(fnl_sug_sido == "Buy", "green", ifelse(fnl_sug_sido == "Sell", "red", "yellow")),
              value = fnl_sug_sido,
              subtitle = "Machine Learning Suggestion",
-             icon = icon("balance-scale")
+             icon = tags$i(icon("balance-scale", style = "font-size: 50px"))
     )
   })
   
@@ -400,7 +417,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_sido_sma == "Buy", "green", ifelse(sug_sido_sma == "Sell", "red", "yellow")),
              value = sug_sido_sma,
              subtitle = "SMA Analysis",
-             icon = icon("tasks")
+             icon =tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -426,7 +443,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_sido_macd == "Buy", "green", ifelse(sug_sido_macd == "Sell", "red", "yellow")),
              value = sug_sido_macd,
              subtitle = "MACD Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -439,7 +456,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_sido_rsi == "Buy", "green", ifelse(sug_sido_rsi == "Sell", "red", "yellow")),
              value = sug_sido_rsi,
              subtitle = "RSI Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -465,7 +482,10 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(
+          valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 97.89% </b></center>")),
+                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -473,15 +493,17 @@ function(input, output, session) {
         withSpinner(valueBoxOutput(outputId = "hoki_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray")
+        withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
   })
   
-  hoki_reac <- reactive({hoki})
+  hoki_reac <- reactive({hoki %>% tail(1)})
   
-  hoki2 <- hoki
+  hoki2 <- hoki %>% tail(1)
   hoki2$close <- format(round(as.numeric(hoki2$close), 1), nsmall=1, big.mark=",")
   hoki2$close <- paste("Rp.", hoki2$close)
   hoki_reac2 <- reactive({hoki2})
@@ -503,7 +525,7 @@ function(input, output, session) {
     valueBox(color = ifelse(fnl_sug_hoki == "Buy", "green", ifelse(fnl_sug_hoki == "Sell", "red", "yellow")),
              value = fnl_sug_hoki,
              subtitle = "Machine Learning Suggestion",
-             icon = icon("balance-scale")
+             icon = tags$i(icon("balance-scale", style = "font-size: 50px"))
     )
   })
   
@@ -516,7 +538,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_hoki_sma == "Buy", "green", ifelse(sug_hoki_sma == "Sell", "red", "yellow")),
              value = sug_hoki_sma,
              subtitle = "SMA Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -529,7 +551,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_hoki_ema == "Buy", "green", ifelse(sug_hoki_ema == "Sell", "red", "yellow")),
              value = sug_hoki_ema,
              subtitle = "EMA Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -542,7 +564,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_hoki_macd == "Buy", "green", ifelse(sug_hoki_macd == "Sell", "red", "yellow")),
              value = sug_hoki_macd,
              subtitle = "MACD Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -555,7 +577,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_hoki_rsi == "Buy", "green", ifelse(sug_hoki_rsi == "Sell", "red", "yellow")),
              value = sug_hoki_rsi,
              subtitle = "RSI Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -581,7 +603,10 @@ function(input, output, session) {
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
+        withSpinner(
+          valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 99.29% </b></center>")),
+                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
         hr(),
         HTML(
           paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -590,19 +615,16 @@ function(input, output, session) {
         withSpinner(valueBoxOutput(outputId = "wika_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "wika_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
         withSpinner(valueBoxOutput(outputId = "wika_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(right = TRUE,
-                       size = "sm",
-                       circle = FALSE,
-                       icon = icon("gear"),
-                       tooltip = tooltipOptions(title = "Additional Information!"))
+        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+          right = TRUE, size = "sm",circle = FALSE,icon = icon("gear"), tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
   })
   
-  wika_reac <- reactive({wika})
+  wika_reac <- reactive({wika %>% tail(1)})
   
-  wika2 <- wika
+  wika2 <- wika %>% tail(1)
   wika2$close <- format(round(as.numeric(wika2$close), 1), nsmall=1, big.mark=",")
   wika2$close <- paste("Rp.", wika2$close)
   wika_reac2 <- reactive({wika2})
@@ -624,7 +646,7 @@ function(input, output, session) {
     valueBox(color = ifelse(fnl_sug_wika == "Buy", "green", ifelse(fnl_sug_wika == "Sell", "red", "yellow")),
              value = fnl_sug_wika,
              subtitle = "Machine Learning Suggestion",
-             icon = icon("balance-scale")
+             icon = tags$i(icon("balance-scale", style = "font-size: 50px"))
     )
   })
   
@@ -637,7 +659,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_wika_sma == "Buy", "green", ifelse(sug_wika_sma == "Sell", "red", "yellow")),
              value = sug_wika_sma,
              subtitle = "SMA Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -650,7 +672,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_wika_ema == "Buy", "green", ifelse(sug_wika_ema == "Sell", "red", "yellow")),
              value = sug_wika_ema,
              subtitle = "EMA Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -663,7 +685,7 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_wika_macd == "Buy", "green", ifelse(sug_wika_macd == "Sell", "red", "yellow")),
              value = sug_wika_macd,
              subtitle = "MACD Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
@@ -676,13 +698,13 @@ function(input, output, session) {
     valueBox(color = ifelse(sug_wika_rsi == "Buy", "green", ifelse(sug_wika_rsi == "Sell", "red", "yellow")),
              value = sug_wika_rsi,
              subtitle = "RSI Analysis",
-             icon = icon("tasks")
+             icon = tags$i(icon("tasks", style = "font-size: 50px"))
     )
   })
   
   # Output Plot Basic BBRI---
   
-  observeEvent(input$bbri.jk, {
+
     output$bri <- renderPlotly({
 
       bbri_area_ploty <- bbri %>%
@@ -747,10 +769,9 @@ function(input, output, session) {
       
       bbri_area_ploty
     })
-  })
 
   # # Output Plot Adv BBRI---
-  observeEvent(input$bbri.jk, {
+
     output$bri_adv <- renderPlotly({
 
       bbri_ploty2 <- bbri %>%
@@ -821,10 +842,8 @@ function(input, output, session) {
                           shareX = TRUE, titleY = TRUE)
       bbri_fig
     })
-  })
 
   # # Output Plot Basic ISAT---
-  observeEvent(input$isat.jk, {
     output$indosat <- renderPlotly({
 
       isat_area_ploty <- isat %>%
@@ -890,10 +909,8 @@ function(input, output, session) {
       isat_area_ploty
 
     })
-  })
 
   # # Output Plot Adv ISAT---
-  observeEvent(input$isat.jk, {
     output$indosat_adv <- renderPlotly({
 
       isat_ploty2 <- isat %>%
@@ -965,10 +982,8 @@ function(input, output, session) {
       isat_fig
 
     })
-  })
 
   # # Output Plot Basic SIDO---
-  observeEvent(input$sidomuncul, {
     output$sido <- renderPlotly({
 
       sido_area_ploty <- sido %>%
@@ -1034,10 +1049,8 @@ function(input, output, session) {
       sido_area_ploty
 
     })
-  })
   
   # # Output Plot Adv SIDO---
-  observeEvent(input$sidomuncul, {
     output$sido_adv <- renderPlotly({
 
       sido_ploty2 <- sido %>%
@@ -1109,10 +1122,8 @@ function(input, output, session) {
       sido_fig
 
     })
-  })
 
   # # Output Plot Basic HOKI---
-  observeEvent(input$hokiberas, {
     output$hoki <- renderPlotly({
 
       hoki_area_ploty <- hoki %>%
@@ -1178,10 +1189,8 @@ function(input, output, session) {
       hoki_area_ploty
 
     })
-  })
 
   # # Output Plot Adv HOKI---
-  observeEvent(input$hokiberas, {
     output$hoki_adv <- renderPlotly({
 
       #Membuat candlestick plot
@@ -1254,10 +1263,8 @@ function(input, output, session) {
       hoki_fig
 
     })
-  })
 
   # # Output Plot Basic WIKA---
-  observeEvent(input$wijayakarya, {
     output$wika <- renderPlotly({
 
       wika_area_ploty <- wika %>%
@@ -1325,10 +1332,7 @@ function(input, output, session) {
 
     })
 
-  })
-
   # # Output Plot Adv WIKA---
-  observeEvent(input$wijayakarya, {
     output$wika_adv <- renderPlotly({
 
       wika_ploty2 <- wika %>%
@@ -1400,11 +1404,17 @@ function(input, output, session) {
       wika_fig
 
     })
-  })
 
   #------------------------------  
   #NAV BAR TAB PANEL PORTFOLIO-GAINLOSS SIMULATOR--- 
-
+  
+  observeEvent(input$simul,{
+    shinyalert(title = "Save your work before changing tab",
+               type = "warning",
+               showConfirmButton = TRUE)
+    
+  })
+  
   output$text2 <- renderUI({
     
     div(style="text-align:justify;
@@ -1458,11 +1468,12 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>BBRI PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        #tags$head(tags$style(HTML(".small-box {height: 60px}"))),
+        tags$head(tags$style(HTML(".small-box {height: 95px}"))),
         valueBoxOutput(outputId = "bbri_buy_sig", width = 4),
         valueBoxOutput(outputId = "bbri_sell_sig", width = 4),
         valueBoxOutput(outputId = "bbri_hold_sig",width = 4),
-        valueBoxOutput(outputId = "bbri_total", width = 12))
+        valueBoxOutput(outputId = "bbri_modal", width = 6),
+        valueBoxOutput(outputId = "bbri_total", width = 6))
       )
     })
 
@@ -1473,24 +1484,38 @@ function(input, output, session) {
         valueBoxOutput(outputId = "bbri_buy_sig2", width = 4),
         valueBoxOutput(outputId = "bbri_sell_sig2", width = 4),
         valueBoxOutput(outputId = "bbri_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "bbri_total2", width = 12))
+        valueBoxOutput(outputId = "bbri_modal2", width = 6),
+        valueBoxOutput(outputId = "bbri_total2", width = 6))
       )
+    })
+    
+    output$history_with_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>BBRI BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+        withSpinner(dataTableOutput("bbri_history"), type = 8,size = 0.5)))
+    })
+    
+    output$history_wo_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>BBRI BUY/SELL HISTORY WITHOUT MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("bbri_history2"), type = 8,size = 0.5)))
     })
 
   }, ignoreNULL = FALSE)
-
-  output$bbri_buy_sig<- renderValueBox({
+  
+  output$bbri_buy_sig<- renderInfoBox({
 
     bbri_total_buy <- bbri_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
 
-    valueBox(color = "green",
+    valueBox(color = "aqua",
              value = bbri_total_buy,
              subtitle = "Total Buy Signal",
-
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
 
@@ -1502,11 +1527,11 @@ function(input, output, session) {
       select("stock_sell") %>%
       summarise(freq = n())
 
-    valueBox(color = "red",
+    valueBox(color = "aqua",
              value = bbri_total_sell,
              subtitle = "Total Sell Signal",
              width = 2,
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
 
@@ -1518,26 +1543,44 @@ function(input, output, session) {
       select("pred_dt") %>%
       summarise(freq = n())
 
-    valueBox(color = "orange",
+    valueBox(color = "aqua",
              value = bbri_total_hold,
              subtitle = "Total Hold Signal",
              width = 2,
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
 
+  output$bbri_modal<- renderValueBox({
+    
+    bbri_total_modal <- bbri_dt_backtest %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      filter(price_stock_bought != 0 & price_stock_bought != "NaN") %>%
+      summarise(total_modal = sum(price_stock_bought))
+    
+    bbri_total_modal$total_modal <- format(round(as.numeric(bbri_total_modal$total_modal), 1), big.mark=",")
+    bbri_total_modal$total_modal <- paste("Rp.", bbri_total_modal$total_modal)
+    
+    valueBox(color = "green",
+             value = bbri_total_modal,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
+    )
+  })
+  
   output$bbri_total<- renderValueBox({
 
     bbri_total_profit <- bbri_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
+    
+    bbri_total_profit$total_profit <- format(round(as.numeric(bbri_total_profit$total_profit), 1), big.mark=",")
 
     valueBox(color = ifelse( bbri_total_profit > 0, 'green', 'red' ),
-             value = bbri_total_profit,
+             value = paste("Rp.", bbri_total_profit),
              subtitle = "Total Profit",
-             width = 12,
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1549,10 +1592,10 @@ function(input, output, session) {
       mutate(buy_signal = 1) %>% 
       select("buy_signal")
     
-    valueBox(color = "green",
+    valueBox(color = "blue",
              value = bbri_total_buy2,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1564,10 +1607,10 @@ function(input, output, session) {
       mutate(sell_signal = 1) %>% 
       select("sell_signal")
     
-    valueBox(color = "red",
+    valueBox(color = "blue",
              value = bbri_total_sell2,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1579,11 +1622,29 @@ function(input, output, session) {
       select("hold_signal") %>% 
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "blue",
              value = bbri_total_hold2,
              subtitle = "Total Hold Signal",
              width = 2,
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$bbri_modal2<- renderValueBox({
+    
+    bbri_buy <- bbri %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    bbri_buy$total_modal <- format(round(as.numeric(bbri_buy$total_modal), 1), big.mark=",")
+    bbri_buy$total_modal <- paste("Rp.", bbri_buy$total_modal)
+    
+    valueBox(color = "green",
+             value = bbri_buy,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1601,14 +1662,88 @@ function(input, output, session) {
       mutate(total_sell = 10 * 100 * close) %>% 
       select("total_sell")
     
-    bbri_profit <- bbri_buy - bbri_sell
+    bbri_profit <- bbri_sell - bbri_buy
+    bbri_profit <- format(round(as.numeric(bbri_profit), 1), big.mark=",")
     
     valueBox(color = ifelse( bbri_profit > 0, 'green', 'red' ),
-             value = bbri_profit,
+             value = paste("Rp",bbri_profit),
              subtitle = "Total Profit",
              width = 12,
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
+  })
+  
+  output$bbri_history <- DT::renderDataTable({
+    bbri_hist <- bbri_dt_backtest %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(bbri_hist, rownames = F,
+                  extensions = 'Buttons',
+                  options = list(
+                    autoWidth = FALSE, scrollX = TRUE,
+                    columnDefs = list(list(width = "125px", targets = "_all")),
+                    dom = 'tpB',
+                    lengthMenu = list(c(5, 15,-1), c('5', '15', 'All')),
+                    pageLength = 5,
+                    buttons = list(
+                      list(
+                        extend = "collection",
+                        text = 'Show More',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(15);
+                           dt.ajax.reload();}")),
+                      list(
+                        extend = "collection",
+                        text = 'Show Less',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(5);
+                           dt.ajax.reload();}")))))
+  })
+  
+  output$bbri_history2 <- DT::renderDataTable({
+    
+    bbri_total_buy3 <- bbri %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(stock_buy = 10,
+             stock_sell = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    bbri_total_sell3 <- bbri %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(stock_sell = 10,
+             stock_buy = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    bbri_buy <- bbri %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    bbri_sell <- bbri %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(total_sell = 10 * 100 * close) %>% 
+      select("total_sell")
+    
+    bbri_total_sell3$profit <- bbri_sell - bbri_buy
+    
+    bbri_hist2 <- rbind(bbri_total_buy3, bbri_total_sell3)
+    
+    bbri_hist2 <- bbri_hist2 %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(bbri_hist2, 
+                  rownames = F,
+                  options = list(autoWidth = FALSE, scrollX = TRUE))
   })
   
   observeEvent(input$isat.jk2, {
@@ -1630,7 +1765,8 @@ function(input, output, session) {
         valueBoxOutput(outputId = "isat_buy_sig", width = 4),
         valueBoxOutput(outputId = "isat_sell_sig", width = 4),
         valueBoxOutput(outputId = "isat_hold_sig", width = 4),
-        valueBoxOutput(outputId = "isat_total", width = 12))
+        valueBoxOutput(outputId = "isat_modal", width = 6),
+        valueBoxOutput(outputId = "isat_total", width = 6))
       )
     })
     
@@ -1641,8 +1777,23 @@ function(input, output, session) {
         valueBoxOutput(outputId = "isat_buy_sig2", width = 4),
         valueBoxOutput(outputId = "isat_sell_sig2", width = 4),
         valueBoxOutput(outputId = "isat_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "isat_total2", width = 12))
+        valueBoxOutput(outputId = "isat_modal2", width = 6),
+        valueBoxOutput(outputId = "isat_total2", width = 6))
       )
+    })
+    
+    output$history_with_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>ISAT BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("isat_history"), type = 8,size = 0.5)))
+    })
+    
+    output$history_wo_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>ISAT BUY/SELL HISTORY WITHOUT MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("isat_history2"), type = 8,size = 0.5)))
     })
     
   })
@@ -1654,10 +1805,10 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
     
-    valueBox(color = "green",
+    valueBox(color = "aqua",
              value = isat_total_buy,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1669,10 +1820,10 @@ function(input, output, session) {
       select("stock_sell") %>%
       summarise(freq = n())
     
-    valueBox(color = "red",
+    valueBox(color = "aqua",
              value = isat_total_sell,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1684,11 +1835,27 @@ function(input, output, session) {
       select("pred_dt") %>%
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "aqua",
              value = isat_total_hold,
              subtitle = "Total Hold Signal",
-             width = 2,
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$isat_modal<- renderValueBox({
+    
+    isat_total_modal <- isat_dt_backtest %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      filter(price_stock_bought != 0 & price_stock_bought != "NaN") %>%
+      summarise(total_modal = sum(price_stock_bought))
+    
+    isat_total_modal$total_modal <- format(round(as.numeric(isat_total_modal$total_modal), 1), big.mark=",")
+    isat_total_modal$total_modal <- paste("Rp.", isat_total_modal$total_modal)
+    
+    valueBox(color = "green",
+             value = isat_total_modal,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1699,11 +1866,13 @@ function(input, output, session) {
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
     
-    valueBox(color = "light-blue",
-             value = isat_total_profit,
+    isat_total_profit$total_profit <- format(round(as.numeric(isat_total_profit$total_profit), 1), big.mark=",")
+    
+    valueBox(color = ifelse(isat_total_profit > 0, "green", "red"),
+             value = paste("Rp.", isat_total_profit$total_profit),
              subtitle = "Total Profit",
              width = 12,
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1715,10 +1884,10 @@ function(input, output, session) {
       mutate(buy_signal = 1) %>% 
       select("buy_signal")
     
-    valueBox(color = "green",
+    valueBox(color = "blue",
              value = isat_total_buy2,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1730,10 +1899,10 @@ function(input, output, session) {
       mutate(sell_signal = 1) %>% 
       select("sell_signal")
     
-    valueBox(color = "red",
+    valueBox(color = "blue",
              value = isat_total_sell2,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1745,10 +1914,28 @@ function(input, output, session) {
       select("hold_signal") %>% 
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "blue",
              value = isat_total_hold2,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$isat_modal2<- renderValueBox({
+    
+    isat_buy <- isat %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    isat_buy <- format(round(as.numeric(isat_buy), 1), big.mark=",")
+    isat_buy <- paste("Rp.", isat_buy)
+    
+    valueBox(color = "green",
+             value = isat_buy,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1766,14 +1953,89 @@ function(input, output, session) {
       mutate(total_sell = 10 * 100 * close) %>% 
       select("total_sell")
     
-    isat_profit <- isat_buy - isat_sell
+    isat_profit <- isat_sell - isat_buy
+    
+    isat_profit <- format(round(as.numeric(isat_profit), 1), big.mark=",")
     
     valueBox(color = ifelse( isat_profit > 0, 'green', 'red' ),
-             value = isat_profit,
+             value = paste("Rp.", isat_profit),
              subtitle = "Total Profit",
              width = 12,
-             icon = icon("dollar")
+             tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
+  })
+  
+  output$isat_history <- DT::renderDataTable({
+    isat_hist <- isat_dt_backtest %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(isat_hist, rownames = F,
+                  extensions = 'Buttons',
+                  options = list(
+                    autoWidth = FALSE, scrollX = TRUE,
+                    columnDefs = list(list(width = "125px", targets = "_all")),
+                    dom = 'tpB',
+                    lengthMenu = list(c(5, 15,-1), c('5', '15', 'All')),
+                    pageLength = 5,
+                    buttons = list(
+                      list(
+                        extend = "collection",
+                        text = 'Show More',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(15);
+                           dt.ajax.reload();}")),
+                      list(
+                        extend = "collection",
+                        text = 'Show Less',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(5);
+                           dt.ajax.reload();}")))))
+  })
+  
+  output$isat_history2 <- DT::renderDataTable({
+    
+    isat_total_buy3 <- isat %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(stock_buy = 10,
+             stock_sell = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    isat_total_sell3 <- isat %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(stock_sell = 10,
+             stock_buy = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    isat_buy <- isat %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    isat_sell <- isat %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(total_sell = 10 * 100 * close) %>% 
+      select("total_sell")
+    
+    isat_total_sell3$profit <-isat_sell - isat_buy
+    
+    isat_hist2 <- rbind(isat_total_buy3, isat_total_sell3)
+    
+    isat_hist2 <- isat_hist2 %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(isat_hist2, 
+                  rownames = F,
+                  options = list(autoWidth = FALSE, scrollX = TRUE))
   })
   
   observeEvent(input$sidomuncul2, {
@@ -1795,7 +2057,8 @@ function(input, output, session) {
         valueBoxOutput(outputId = "sido_buy_sig", width = 4),
         valueBoxOutput(outputId = "sido_sell_sig", width = 4),
         valueBoxOutput(outputId = "sido_hold_sig", width = 4),
-        valueBoxOutput(outputId = "sido_total", width = 12))
+        valueBoxOutput(outputId = "sido_modal", width = 6),
+        valueBoxOutput(outputId = "sido_total", width = 6))
       )
     })
     
@@ -1806,8 +2069,23 @@ function(input, output, session) {
         valueBoxOutput(outputId = "sido_buy_sig2", width = 4),
         valueBoxOutput(outputId = "sido_sell_sig2", width = 4),
         valueBoxOutput(outputId = "sido_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "sido_total2", width = 12))
+        valueBoxOutput(outputId = "sido_modal2", width = 6),
+        valueBoxOutput(outputId = "sido_total2", width = 6))
       )
+    })
+    
+    output$history_with_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>SIDO BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("sido_history"), type = 8,size = 0.5)))
+    })
+    
+    output$history_wo_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>SIDO BUY/SELL HISTORY WITHOUT MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("sido_history2"), type = 8,size = 0.5)))
     })
     
   })
@@ -1819,10 +2097,10 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
     
-    valueBox(color = "green",
+    valueBox(color = "aqua",
              value = sido_total_buy,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1834,10 +2112,10 @@ function(input, output, session) {
       select("stock_sell") %>%
       summarise(freq = n())
     
-    valueBox(color = "red",
+    valueBox(color = "aqua",
              value = sido_total_sell,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1849,10 +2127,27 @@ function(input, output, session) {
       select("pred_dt") %>%
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "aqua",
              value = sido_total_hold,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$sido_modal<- renderValueBox({
+    
+    sido_total_modal <- sido_dt_backtest %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      filter(price_stock_bought != 0 & price_stock_bought != "NaN") %>%
+      summarise(total_modal = sum(price_stock_bought))
+    
+    sido_total_modal$total_modal <- format(round(as.numeric(sido_total_modal$total_modal), 1), big.mark=",")
+    sido_total_modal$total_modal <- paste("Rp.", sido_total_modal$total_modal)
+    
+    valueBox(color = "green",
+             value = sido_total_modal,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1863,10 +2158,12 @@ function(input, output, session) {
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
     
-    valueBox(color = "light-blue",
-             value = sido_total_profit,
+    sido_total_profit$total_profit <- format(round(as.numeric(sido_total_profit$total_profit), 1), big.mark=",")
+    
+    valueBox(color = ifelse( sido_total_profit > 0, 'green', 'red' ),
+             value = paste("Rp.", sido_total_profit),
              subtitle = "Total Profit",
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1878,10 +2175,10 @@ function(input, output, session) {
       mutate(buy_signal = 1) %>% 
       select("buy_signal")
     
-    valueBox(color = "green",
+    valueBox(color = "blue",
              value = sido_total_buy2,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1893,10 +2190,10 @@ function(input, output, session) {
       mutate(sell_signal = 1) %>% 
       select("sell_signal")
     
-    valueBox(color = "red",
+    valueBox(color = "blue",
              value = sido_total_sell2,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1908,10 +2205,28 @@ function(input, output, session) {
       select("hold_signal") %>% 
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "blue",
              value = sido_total_hold2,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$sido_modal2<- renderValueBox({
+    
+    sido_buy <- sido %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    sido_buy <- format(round(as.numeric(sido_buy), 1), big.mark=",")
+    sido_buy <- paste("Rp.", sido_buy)
+    
+    valueBox(color = "green",
+             value = sido_buy,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -1929,14 +2244,89 @@ function(input, output, session) {
       mutate(total_sell = 10 * 100 * close) %>% 
       select("total_sell")
     
-    sido_profit <- sido_buy - sido_sell
+    sido_profit <- sido_sell - sido_buy
+    
+    sido_profit <- format(round(as.numeric(sido_profit), 1), big.mark=",")
     
     valueBox(color = ifelse( sido_profit > 0, 'green', 'red' ),
-             value = sido_profit,
+             value = paste("Rp.", sido_profit),
              subtitle = "Total Profit",
              width = 12,
-             icon = icon("dollar")
+             tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
+  })
+  
+  output$sido_history <- DT::renderDataTable({
+    sido_hist <- sido_dt_backtest %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(sido_hist, rownames = F,
+                  extensions = 'Buttons',
+                  options = list(
+                    autoWidth = FALSE, scrollX = TRUE,
+                    columnDefs = list(list(width = "125px", targets = "_all")),
+                    dom = 'tpB',
+                    lengthMenu = list(c(5, 15,-1), c('5', '15', 'All')),
+                    pageLength = 5,
+                    buttons = list(
+                      list(
+                        extend = "collection",
+                        text = 'Show More',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(15);
+                           dt.ajax.reload();}")),
+                      list(
+                        extend = "collection",
+                        text = 'Show Less',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(5);
+                           dt.ajax.reload();}")))))
+  })
+  
+  output$sido_history2 <- DT::renderDataTable({
+    
+    sido_total_buy3 <- sido %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(stock_buy = 10,
+             stock_sell = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    sido_total_sell3 <- sido %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(stock_sell = 10,
+             stock_buy = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    sido_buy <- sido %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    sido_sell <- sido %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(total_sell = 10 * 100 * close) %>% 
+      select("total_sell")
+    
+    sido_total_sell3$profit <- sido_sell - sido_buy
+    
+    sido_hist2 <- rbind(sido_total_buy3, sido_total_sell3)
+    
+    sido_hist2 <- sido_hist2 %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(sido_hist2, 
+                  rownames = F,
+                  options = list(autoWidth = FALSE, scrollX = TRUE))
   })
   
   observeEvent(input$hokiberas2, {
@@ -1958,7 +2348,8 @@ function(input, output, session) {
         valueBoxOutput(outputId = "hoki_buy_sig", width = 4),
         valueBoxOutput(outputId = "hoki_sell_sig", width = 4),
         valueBoxOutput(outputId = "hoki_hold_sig", width = 4),
-        valueBoxOutput(outputId = "hoki_total", width = 12))
+        valueBoxOutput(outputId = "hoki_modal", width = 6),
+        valueBoxOutput(outputId = "hoki_total", width = 6))
       )
     })
     
@@ -1969,8 +2360,23 @@ function(input, output, session) {
         valueBoxOutput(outputId = "hoki_buy_sig2", width = 4),
         valueBoxOutput(outputId = "hoki_sell_sig2", width = 4),
         valueBoxOutput(outputId = "hoki_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "hoki_total2", width = 12))
+        valueBoxOutput(outputId = "hoki_modal2", width = 6),
+        valueBoxOutput(outputId = "hoki_total2", width = 6))
       )
+    })
+    
+    output$history_with_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>HOKI BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("hoki_history"), type = 8,size = 0.5)))
+    })
+    
+    output$history_wo_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>HOKI BUY/SELL HISTORY WITHOUT MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("hoki_history2"), type = 8,size = 0.5)))
     })
     
   })
@@ -1982,10 +2388,10 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
     
-    valueBox(color = "green",
+    valueBox(color = "aqua",
              value = hoki_total_buy,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -1996,11 +2402,11 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       select("stock_sell") %>%
       summarise(freq = n())
-    
-    valueBox(color = "red",
+
+    valueBox(color = "aqua",
              value = hoki_total_sell,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2012,24 +2418,43 @@ function(input, output, session) {
       select("pred_dt") %>%
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "aqua",
              value = hoki_total_hold,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$hoki_modal<- renderValueBox({
+    
+    hoki_total_modal <- hoki_dt_backtest %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      filter(price_stock_bought != 0 & price_stock_bought != "NaN") %>%
+      summarise(total_modal = sum(price_stock_bought))
+    
+    hoki_total_modal$total_modal <- format(round(as.numeric(hoki_total_modal$total_modal), 1), big.mark=",")
+    hoki_total_modal$total_modal <- paste("Rp.", hoki_total_modal$total_modal)
+    
+    valueBox(color = "green",
+             value = hoki_total_modal,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
   output$hoki_total<- renderValueBox({
     
-    hoki_total_profit <- bbri_dt_backtest %>%
+    hoki_total_profit <- hoki_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
     
-    valueBox(color = "light-blue",
-             value = hoki_total_profit,
+    hoki_total_profit$total_profit <- format(round(as.numeric(hoki_total_profit$total_profit), 1), big.mark=",")
+    
+    valueBox(color = ifelse( hoki_total_profit > 0, 'green', 'red' ),
+             value = paste("Rp.", hoki_total_profit),
              subtitle = "Total Profit",
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -2041,10 +2466,10 @@ function(input, output, session) {
       mutate(buy_signal = 1) %>% 
       select("buy_signal")
     
-    valueBox(color = "green",
+    valueBox(color = "blue",
              value = hoki_total_buy2,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2056,10 +2481,10 @@ function(input, output, session) {
       mutate(sell_signal = 1) %>% 
       select("sell_signal")
     
-    valueBox(color = "red",
+    valueBox(color = "blue",
              value = hoki_total_sell2,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2071,10 +2496,28 @@ function(input, output, session) {
       select("hold_signal") %>% 
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "blue",
              value = hoki_total_hold2,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$hoki_modal2<- renderValueBox({
+    
+    hoki_buy <- hoki %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    hoki_buy <- format(round(as.numeric(hoki_buy), 1), big.mark=",")
+    hoki_buy <- paste("Rp.", hoki_buy)
+    
+    valueBox(color = "green",
+             value = hoki_buy,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -2092,14 +2535,89 @@ function(input, output, session) {
       mutate(total_sell = 10 * 100 * close) %>% 
       select("total_sell")
     
-    hoki_profit <- hoki_buy - hoki_sell
+    hoki_profit <- hoki_sell - hoki_buy
+    
+    hoki_profit <- format(round(as.numeric(hoki_profit), 1), big.mark=",")
     
     valueBox(color = ifelse( hoki_profit > 0, 'green', 'red' ),
-             value = hoki_profit,
+             value = paste("Rp.", hoki_profit),
              subtitle = "Total Profit",
              width = 12,
-             icon = icon("dollar")
+             tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
+  })
+  
+  output$hoki_history <- DT::renderDataTable({
+    hoki_hist <- hoki_dt_backtest %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(hoki_hist, rownames = F,
+                  extensions = 'Buttons',
+                  options = list(
+                    autoWidth = FALSE, scrollX = TRUE,
+                    columnDefs = list(list(width = "125px", targets = "_all")),
+                    dom = 'tpB',
+                    lengthMenu = list(c(5, 15,-1), c('5', '15', 'All')),
+                    pageLength = 5,
+                    buttons = list(
+                      list(
+                        extend = "collection",
+                        text = 'Show More',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(15);
+                           dt.ajax.reload();}")),
+                      list(
+                        extend = "collection",
+                        text = 'Show Less',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(5);
+                           dt.ajax.reload();}")))))
+  })
+  
+  output$hoki_history2 <- DT::renderDataTable({
+    
+    hoki_total_buy3 <- hoki %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(stock_buy = 10,
+             stock_sell = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    hoki_total_sell3 <- hoki %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(stock_sell = 10,
+             stock_buy = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    hoki_buy <- hoki %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    hoki_sell <- hoki %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(total_sell = 10 * 100 * close) %>% 
+      select("total_sell")
+    
+    hoki_total_sell3$profit <- hoki_sell - hoki_buy
+    
+    hoki_hist2 <- rbind(hoki_total_buy3, hoki_total_sell3)
+    
+    hoki_hist2 <- hoki_hist2 %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(hoki_hist2, 
+                  rownames = F,
+                  options = list(autoWidth = FALSE, scrollX = TRUE))
   })
   
   observeEvent(input$wijayakarya2, {
@@ -2121,7 +2639,8 @@ function(input, output, session) {
         valueBoxOutput(outputId = "wika_buy_sig", width = 4),
         valueBoxOutput(outputId = "wika_sell_sig", width = 4),
         valueBoxOutput(outputId = "wika_hold_sig", width = 4),
-        valueBoxOutput(outputId = "wika_total", width = 12))
+        valueBoxOutput(outputId = "wika_modal", width = 6),
+        valueBoxOutput(outputId = "wika_total", width = 6))
       )
     })
     
@@ -2132,8 +2651,23 @@ function(input, output, session) {
         valueBoxOutput(outputId = "wika_buy_sig2", width = 4),
         valueBoxOutput(outputId = "wika_sell_sig2", width = 4),
         valueBoxOutput(outputId = "wika_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "wika_total2", width = 12))
+        valueBoxOutput(outputId = "wika_modal2", width = 6),
+        valueBoxOutput(outputId = "wika_total2", width = 6))
       )
+    })
+    
+    output$history_with_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>WIKA BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("wika_history"), type = 8,size = 0.5)))
+    })
+    
+    output$history_wo_ml <- renderUI({
+      div(
+        HTML(paste("<b><center><u>WIKA BUY/SELL HISTORY WITHOUT MACHINE LEARNING :</b></center></u><br>")),
+        fluidPage(
+          withSpinner(dataTableOutput("wika_history2"), type = 8,size = 0.5)))
     })
     
   })
@@ -2145,10 +2679,10 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
     
-    valueBox(color = "green",
+    valueBox(color = "aqua",
              value = wika_total_buy,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2160,10 +2694,10 @@ function(input, output, session) {
       select("stock_sell") %>%
       summarise(freq = n())
     
-    valueBox(color = "red",
+    valueBox(color = "aqua",
              value = wika_total_sell,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2175,10 +2709,27 @@ function(input, output, session) {
       select("pred_dt") %>%
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "aqua",
              value = wika_total_hold,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$wika_modal<- renderValueBox({
+    
+    wika_total_modal <- wika_dt_backtest %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      filter(price_stock_bought != 0 & price_stock_bought != "NaN") %>%
+      summarise(total_modal = sum(price_stock_bought))
+    
+    wika_total_modal$total_modal <- format(round(as.numeric(wika_total_modal$total_modal), 1), big.mark=",")
+    wika_total_modal$total_modal <- paste("Rp.", wika_total_modal$total_modal)
+    
+    valueBox(color = "green",
+             value = wika_total_modal,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -2189,10 +2740,12 @@ function(input, output, session) {
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
     
-    valueBox(color = "light-blue",
-             value = wika_total_profit,
+    wika_total_profit$total_profit <- format(round(as.numeric(wika_total_profit$total_profit), 1), big.mark=",")
+    
+    valueBox(color = ifelse( wika_total_profit > 0, 'green', 'red' ),
+             value = paste("Rp.", wika_total_profit),
              subtitle = "Total Profit",
-             icon = icon("dollar")
+             icon = tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -2204,10 +2757,10 @@ function(input, output, session) {
       mutate(buy_signal = 1) %>% 
       select("buy_signal")
     
-    valueBox(color = "green",
+    valueBox(color = "blue",
              value = wika_total_buy2,
              subtitle = "Total Buy Signal",
-             icon = icon("dollar")
+             tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2219,10 +2772,10 @@ function(input, output, session) {
       mutate(sell_signal = 1) %>% 
       select("sell_signal")
     
-    valueBox(color = "red",
+    valueBox(color = "blue",
              value = wika_total_sell2,
              subtitle = "Total Sell Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
   
@@ -2234,10 +2787,28 @@ function(input, output, session) {
       select("hold_signal") %>% 
       summarise(freq = n())
     
-    valueBox(color = "orange",
+    valueBox(color = "blue",
              value = wika_total_hold2,
              subtitle = "Total Hold Signal",
-             icon = icon("dollar")
+             icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
+    )
+  })
+  
+  output$wika_modal2<- renderValueBox({
+    
+    wika_buy <- wika %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    wika_buy <- format(round(as.numeric(wika_buy), 1), big.mark=",")
+    wika_buy <- paste("Rp.", wika_buy)
+    
+    valueBox(color = "green",
+             value = wika_buy,
+             subtitle = "Total Modal",
+             icon = tags$i(icon("export", lib = 'glyphicon'), style = "font-size: 30px")
     )
   })
   
@@ -2255,44 +2826,91 @@ function(input, output, session) {
       mutate(total_sell = 10 * 100 * close) %>% 
       select("total_sell")
     
-    wika_profit <- wika_buy - wika_sell
+    wika_profit <- wika_sell - wika_buy
+    
+    wika_profit <- format(round(as.numeric(wika_profit), 1), big.mark=",")
     
     valueBox(color = ifelse( wika_profit > 0, 'green', 'red' ),
-             value = wika_profit,
+             value = paste("Rp.", wika_profit),
              subtitle = "Total Profit",
-             icon = icon("dollar")
+             width = 12,
+             tags$i(icon("import", lib = 'glyphicon'), style = "font-size: 30px")
     )
+  })
+  
+  output$wika_history <- DT::renderDataTable({
+    wika_hist <- wika_dt_backtest %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(wika_hist, rownames = F,
+                  extensions = 'Buttons',
+                  options = list(
+                    autoWidth = FALSE, scrollX = TRUE,
+                    columnDefs = list(list(width = "125px", targets = "_all")),
+                    dom = 'tpB',
+                    lengthMenu = list(c(5, 15,-1), c('5', '15', 'All')),
+                    pageLength = 5,
+                    buttons = list(
+                      list(
+                        extend = "collection",
+                        text = 'Show More',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(15);
+                           dt.ajax.reload();}")),
+                      list(
+                        extend = "collection",
+                        text = 'Show Less',
+                        action = DT::JS(
+                          "function ( e, dt, node, config ) {
+                           dt.page.len(5);
+                           dt.ajax.reload();}")))))
+  })
+  
+  output$wika_history2 <- DT::renderDataTable({
+    
+    wika_total_buy3 <- wika %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(stock_buy = 10,
+             stock_sell = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    wika_total_sell3 <- wika %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(stock_sell = 10,
+             stock_buy = 0,
+             profit = 0) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    wika_buy <- wika %>%
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      head(1) %>% 
+      mutate(total_modal = 10 * 100 * open) %>% 
+      select("total_modal")
+    
+    wika_sell <- wika %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
+      tail(1) %>% 
+      mutate(total_sell = 10 * 100 * close) %>% 
+      select("total_sell")
+    
+    wika_total_sell3$profit <- wika_sell - wika_buy
+    
+    wika_hist2 <- rbind(wika_total_buy3, wika_total_sell3)
+    
+    wika_hist2 <- wika_hist2 %>% 
+      filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+    
+    DT::datatable(wika_hist2, 
+                  rownames = F,
+                  options = list(autoWidth = FALSE, scrollX = TRUE))
   })
   
 }
 
 
-# output$selection_comp <- renderUI({
-#   div(
-#     style="text-align:justify;
-#       font-size: 15px;
-#       color:black;
-#       background-color: whitesmoke ;
-#       border-color:black;
-#       padding:15px;
-#       border-radius:10px;
-#       border-size:15px",
-#     prettyRadioButtons(width = "150%",
-#       inputId = "stocks",
-#       shape = "curve",
-#       label = "Please select one stock to be simulate :",
-#       choices = c("BBRI", "ISAT", "SIDO", "HOKI", "WIKA"),
-#       icon = icon("check"),
-#       status = "info",
-#       inline = TRUE,
-#       animation = "jelly"),
-#     dateRangeInput(
-#       inputId = "date",
-#       label = "Please Pick Range Of Date:",
-#       start = "2018-01-02",
-#       end = "2021-07-30",
-#       min = "2018-01-01",
-#       max = "2023-12-31"
-#     )
-#   )
-# })

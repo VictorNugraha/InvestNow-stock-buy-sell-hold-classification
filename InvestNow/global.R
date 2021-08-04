@@ -10,6 +10,8 @@ library(slickR)
 library(rintrojs)
 library(shinyBS)
 library(shinyjs)
+library(summaryBox)
+library(DT)
 
 # data wrangling (data pre-processing + eda)
 library(tidyverse)
