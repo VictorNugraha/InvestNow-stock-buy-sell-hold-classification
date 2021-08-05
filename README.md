@@ -3,6 +3,8 @@ This is my project for Data Career Day at Algoritma School of Data Sciece.
 
 Rpubs link for readme Bahasa Indonesia: https://rpubs.com/VicNP/proposal-dcd
 
+Live Demo : https://vicnp.shinyapps.io/InvestNow/
+
 # Background
 
 <b>Is today the right time for you to invest in stock?</b>
