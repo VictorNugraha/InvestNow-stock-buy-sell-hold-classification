@@ -305,7 +305,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 1,data.intro = "This is slider its doing xyz"),
+                                                  border-color: whitesmoke"),data.step = 1, data.intro = "<center><b>Trading Assitance Section</b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -363,7 +363,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 5,data.intro = "This is slider its doing xyz"),
+                                                  border-color: whitesmoke"),data.step = 5, data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -374,29 +374,43 @@ fluidPage(
                             fluidRow(column(width = 12, uiOutput("text3"))),
                             fluidRow(
                               column(width = 4),
-                              column(width = 4, introBox(uiOutput("calender"),data.step = 6,data.intro = "This is slider its doing xyz")),
+                              column(width = 4, introBox(uiOutput("calender"),data.step =6,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Please select start and end date to see profit earned from range of time.</small>")),
                               column(width = 4)
                             ),
                             fluidRow(
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("comparison_with_ml"), data.step = 7,data.intro = "This is slider its doing xyz")
+                                introBox(uiOutput("comparison_with_ml"), data.step = 7,
+                                         data.intro = "<center><b>G/L Simulator Section</b></center><br><small>In this section will be shown result with Machine Learning assitance.
+                                         <br>- Total Buy Signal: Indicates 1 stock will be buy at Opening Price.
+                                         <br>- Total Sell Signal: Indicates all the stock bought from accumulated from previous buy singal will be sell at the Closing Price.
+                                         <br>- Total Hold: Indicates to hold position.
+                                         <br>- Total Modal: Total modal issued to buy stocks.
+                                         <br>- Total Profit: Total profit you get. 
+                                         </small>")
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("comparison_wo_ml"),data.step = 8,data.intro = "This is slider its doing xyz")
+                                introBox(uiOutput("comparison_wo_ml"),data.step = 8,
+                                         data.intro = "<center><b>G/L Simulator Section</b></center><br><small>In this section will be shown result without Machine Learning assitance.
+                                         <br>- Total Buy Signal: Indicates 10 stock will be buy at Opening Price based on input date.
+                                         <br>- Total Sell Signal: Indicates all the stock bought will be sell at the Closing Price based on end date.
+                                         <br>- Total Hold: Indicates to hold position.
+                                         <br>- Total Modal: Total modal issued to buy stocks.
+                                         <br>- Total Profit: Total profit you get. 
+                                         </small>")
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("history_with_ml"),data.step = 9,data.intro = "This is slider its doing xyz")
+                                introBox(uiOutput("history_with_ml"),data.step = 9,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Trading history with Machine Learning.</small>")
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("history_wo_ml"),data.step = 10,data.intro = "This is slider its doing xyz")
+                                introBox(uiOutput("history_wo_ml"),data.step = 10,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Trading history without Machine Learning.</small>")
                               )
                             )
                           )

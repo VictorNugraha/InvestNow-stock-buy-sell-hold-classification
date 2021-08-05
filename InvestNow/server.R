@@ -137,14 +137,14 @@ function(input, output, session) {
                      span(textOutput("price_bbri2"), style = "font-size: 25px"), 
                      textOutput("date_bbri2"), 
                      withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
-          ),data.step = 2,data.intro = "This is slider its doing xyz"),
+          ),data.step = 2,data.intro = "<center><b>Trading Assitance Section</b></center><br> <small>Please choose the more convenient one of the plots below to see the development of stock prices.</small>"),
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
           tags$head(tags$style(HTML(".small-box {height: 95px}"))),
-          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "This is slider its doing xyz"),
+          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "<center><b>Trading Assitance Section</b></center><br><small>This box will show the suggestion from the Machine Learning.<br>- Buy (Green Background Color)<br>- Sell (Red Background Color)<br>- Hold (Yellow Background Color)</small>"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
@@ -153,7 +153,7 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = "This is slider its doing xyz"),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = "<center><b>Trading Assitance Section</b></center><br><small>These four box will show Technical Analysis result from InvestNow stock analyst.</small>"),
           div(#style = "position: absolute; left: 10em;",
             dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
                            right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
