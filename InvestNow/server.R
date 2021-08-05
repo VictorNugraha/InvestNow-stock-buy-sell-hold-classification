@@ -1,7 +1,7 @@
 function(input, output, session) {
-    
-#------------------------------  
-#NAV BAR TAB PANEL ABOUT-HOME PAGE---  
+  
+  #------------------------------  
+  #NAV BAR TAB PANEL ABOUT-HOME PAGE---  
   
   # Output slide show slicker---
   output$slide_show <- renderSlickR({
@@ -21,9 +21,9 @@ function(input, output, session) {
          height = "100%")
     
   }, deleteFile = F)
-
-#NAV BAR TAB PANEL ABOUT-HOW WE HELP PAGE---  
-    
+  
+  #NAV BAR TAB PANEL ABOUT-HOW WE HELP PAGE---  
+  
   # Output render image About - How We Help---
   output$image2 <- renderImage({
     
@@ -68,8 +68,40 @@ function(input, output, session) {
                       selected = "trading")
   })
   
-#------------------------------  
-#NAV BAR TAB PANEL PORTFOLIO-TRADING ASSISTANCE---    
+  #------------------------------  
+  #NAV BAR TAB PANEL ABOUT-MODAL DIALOG--- 
+  observeEvent("", {
+    showModal(modalDialog(
+      includeHTML("html/intro_text.Rhtml"),
+      easyClose = TRUE,
+      footer = tagList(
+        column(width = 12, 
+               actionButton(inputId = "close", label = "Close", icon = icon("times")), align = "center"))))
+  })
+  
+  observeEvent(input$close,{
+    removeModal()
+  })
+  
+  #------------------------------  
+  #NAV BAR TAB PANEL PORTFOLIO-MODAL DIALOG--- 
+  output$modal_dialog <- renderUI({
+    showModal(modalDialog(
+      includeHTML("html/intro_text2.Rhtml"),
+      easyClose = TRUE,
+      footer = tagList(
+        column(width = 12, 
+               actionButton(inputId = "intro", label = "INTRODUCTION TOUR", icon = icon("info-circle")), align = "center"))))
+  })
+  
+  observeEvent(input$intro,{
+    removeModal()
+  })
+  
+  observeEvent(input$intro,introjs(session, events = list(onbeforechange = readCallback("switchTabs"))))
+  
+  #------------------------------  
+  #NAV BAR TAB PANEL PORTFOLIO-TRADING ASSISTANCE---    
   
   output$text1 <- renderUI({
     
@@ -92,43 +124,45 @@ function(input, output, session) {
     output$plot_output <- renderUI({
       div(HTML(paste("<h4>PT. Bank Rakyat Indonesia (Persero) Tbk</h4>
                      IDX: <a href= https://bri.co.id/investasi>BBRI.JK</a>")),
-      br(),br(),
-      tabsetPanel(
-        id="bbri_plot",
-        type = "tabs",
-        tabPanel("Basic - Line Chart", 
-                 span(textOutput("price_bbri"), style = "font-size: 25px"), 
-                 textOutput("date_bbri"), 
-                 withSpinner(plotlyOutput("bri"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", 
-                 span(textOutput("price_bbri2"), style = "font-size: 25px"), 
-                 textOutput("date_bbri2"), 
-                 withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
-        )
+          br(),br(),
+          introBox(
+          tabsetPanel(
+            id="bbri_plot",
+            type = "tabs",
+            tabPanel("Basic - Line Chart", 
+                     span(textOutput("price_bbri"), style = "font-size: 25px"), 
+                     textOutput("date_bbri"), 
+                     withSpinner(plotlyOutput("bri"), type = 8,size = 0.5, color = "gray")),
+            tabPanel("Advance - Candlestick Chart", 
+                     span(textOutput("price_bbri2"), style = "font-size: 25px"), 
+                     textOutput("date_bbri2"), 
+                     withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
+          ),data.step = 2,data.intro = "This is slider its doing xyz"),
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
           tags$head(tags$style(HTML(".small-box {height: 95px}"))),
-        valueBoxOutput(outputId = "prediction_result_bbri", width = 12),
-        dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
-          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
-        hr(),
-        HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
-        withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        div(#style = "position: absolute; left: 10em;",
-        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
-        )
+          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "This is slider its doing xyz"),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          hr(),
+          HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
+          introBox(
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = "This is slider its doing xyz"),
+          div(#style = "position: absolute; left: 10em;",
+            dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                           right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
+      )
     })
   }, ignoreNULL = FALSE, ignoreInit = FALSE, once = F)
   
   output$acc_bbri <- renderValueBox({
-
+    
     valueBox(color = "black",
              value = "97.67%",
              subtitle = "",
@@ -161,8 +195,8 @@ function(input, output, session) {
              value = fnl_sug_bbri,
              subtitle = "Machine Learning Suggestion",
              icon = tags$i(icon("balance-scale"), style = "font-size: 50px")
-             )
-    })
+    )
+  })
   
   output$bbri_ta_sma <- renderValueBox({
     
@@ -223,37 +257,37 @@ function(input, output, session) {
       div(HTML(paste("<h4>PT. Indosat Tbk</h4>
                      IDX: <a href= https://indosatooredoo.com/portal/en/corplanding>ISAT.JK</a>")),
           br(),br(),
-      tabsetPanel(
-        id="isat_plot",
-        type = "tabs",
-        tabPanel("Basic - Line Chart", 
-                 span(textOutput("price_isat"), style = "font-size: 25px"), 
-                 textOutput("date_isat"), 
-                 withSpinner(plotlyOutput("indosat"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", 
-                 span(textOutput("price_isat2"), style = "font-size: 25px"), 
-                 textOutput("date_isat2"), 
-                 withSpinner(plotlyOutput("indosat_adv"), type = 8,size = 0.5, color = "gray"))
-        )
+          tabsetPanel(
+            id="isat_plot",
+            type = "tabs",
+            tabPanel("Basic - Line Chart", 
+                     span(textOutput("price_isat"), style = "font-size: 25px"), 
+                     textOutput("date_isat"), 
+                     withSpinner(plotlyOutput("indosat"), type = 8,size = 0.5, color = "gray")),
+            tabPanel("Advance - Candlestick Chart", 
+                     span(textOutput("price_isat2"), style = "font-size: 25px"), 
+                     textOutput("date_isat2"), 
+                     withSpinner(plotlyOutput("indosat_adv"), type = 8,size = 0.5, color = "gray"))
+          )
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(
-          valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(
+            valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 98.60% </b></center>")),
-                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
-        hr(),
-        HTML(
-          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          hr(),
+          HTML(
+            paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        withSpinner(valueBoxOutput(outputId = "isat_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "isat_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "isat_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "isat_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          withSpinner(valueBoxOutput(outputId = "isat_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "isat_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "isat_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "isat_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
@@ -343,38 +377,38 @@ function(input, output, session) {
     output$plot_output <- renderUI({
       div(HTML(paste("<h4>PT. Industri Jamu Dan Farmasi Sido Muncul Tbk</h4>
                      IDX: <a href= https://investor.sidomuncul.co.id/id/understanding_sido.html>SIDO.JK</a>")),
-      br(),br(),
-      tabsetPanel(
-        id="sido_plot",
-        type = "tabs",
-        tabPanel("Basic - Line Chart", 
-                 span(textOutput("price_sido"), style = "font-size: 25px"), 
-                 textOutput("date_sido"), 
-                 withSpinner(plotlyOutput("sido"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", 
-                 span(textOutput("price_sido2"), style = "font-size: 25px"), 
-                 textOutput("date_sido2"), 
-                 withSpinner(plotlyOutput("sido_adv"), type = 8,size = 0.5, color = "gray"))
-        )
+          br(),br(),
+          tabsetPanel(
+            id="sido_plot",
+            type = "tabs",
+            tabPanel("Basic - Line Chart", 
+                     span(textOutput("price_sido"), style = "font-size: 25px"), 
+                     textOutput("date_sido"), 
+                     withSpinner(plotlyOutput("sido"), type = 8,size = 0.5, color = "gray")),
+            tabPanel("Advance - Candlestick Chart", 
+                     span(textOutput("price_sido2"), style = "font-size: 25px"), 
+                     textOutput("date_sido2"), 
+                     withSpinner(plotlyOutput("sido_adv"), type = 8,size = 0.5, color = "gray"))
+          )
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(
-          valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(
+            valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 96.41% </b></center>")),
-                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
-        hr(),
-        HTML(
-          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          hr(),
+          HTML(
+            paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        withSpinner(valueBoxOutput(outputId = "sido_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-          right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          withSpinner(valueBoxOutput(outputId = "sido_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
@@ -465,37 +499,37 @@ function(input, output, session) {
       div(HTML(paste("<h4>PT. Buyung Poetra Sembada Tbk</h4>
                      IDX: <a href= https://topikoki.com/about-us-en-translation/>HOKIX.JK</a>")),
           br(),br(),
-      tabsetPanel(
-        id="hoki_plot",
-        type = "tabs",
-        tabPanel("Basic - Line Chart", 
-                 span(textOutput("price_hoki"), style = "font-size: 25px"), 
-                 textOutput("date_hoki"), 
-                 withSpinner(plotlyOutput("hoki"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", 
-                 span(textOutput("price_hoki2"), style = "font-size: 25px"), 
-                 textOutput("date_hoki2"), 
-                 withSpinner(plotlyOutput("hoki_adv"), type = 8,size = 0.5, color = "gray"))
-        )
+          tabsetPanel(
+            id="hoki_plot",
+            type = "tabs",
+            tabPanel("Basic - Line Chart", 
+                     span(textOutput("price_hoki"), style = "font-size: 25px"), 
+                     textOutput("date_hoki"), 
+                     withSpinner(plotlyOutput("hoki"), type = 8,size = 0.5, color = "gray")),
+            tabPanel("Advance - Candlestick Chart", 
+                     span(textOutput("price_hoki2"), style = "font-size: 25px"), 
+                     textOutput("date_hoki2"), 
+                     withSpinner(plotlyOutput("hoki_adv"), type = 8,size = 0.5, color = "gray"))
+          )
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(
-          valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(
+            valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 97.89% </b></center>")),
-                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
-        hr(),
-        HTML(
-          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          hr(),
+          HTML(
+            paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        withSpinner(valueBoxOutput(outputId = "hoki_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          withSpinner(valueBoxOutput(outputId = "hoki_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
@@ -586,37 +620,37 @@ function(input, output, session) {
       div(HTML(paste("<h4>PT. Wijaya Karya (Persero) Tbk</h4>
                      IDX: <a href= https://wika.co.id/id/#>WIKA.JK</a>")),
           br(),br(),
-      tabsetPanel(
-        id="wika_plot",
-        type = "tabs",
-        tabPanel("Basic - Line Chart", 
-                 span(textOutput("price_wika"), style = "font-size: 25px"), 
-                 textOutput("date_wika"), 
-                 withSpinner(plotlyOutput("wika"), type = 8,size = 0.5, color = "gray")),
-        tabPanel("Advance - Candlestick Chart", 
-                 span(textOutput("price_wika2"), style = "font-size: 25px"), 
-                 textOutput("date_wika2"), 
-                 withSpinner(plotlyOutput("wika_adv"), type = 8,size = 0.5, color = "gray"))
-        )
+          tabsetPanel(
+            id="wika_plot",
+            type = "tabs",
+            tabPanel("Basic - Line Chart", 
+                     span(textOutput("price_wika"), style = "font-size: 25px"), 
+                     textOutput("date_wika"), 
+                     withSpinner(plotlyOutput("wika"), type = 8,size = 0.5, color = "gray")),
+            tabPanel("Advance - Candlestick Chart", 
+                     span(textOutput("price_wika2"), style = "font-size: 25px"), 
+                     textOutput("date_wika2"), 
+                     withSpinner(plotlyOutput("wika_adv"), type = 8,size = 0.5, color = "gray"))
+          )
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u><br>")),
-        withSpinner(
-          valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(
+            valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 99.29% </b></center>")),
-                       right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
-        hr(),
-        HTML(
-          paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          hr(),
+          HTML(
+            paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
                  <br>")),
-        withSpinner(valueBoxOutput(outputId = "wika_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "wika_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "wika_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-        withSpinner(valueBoxOutput(outputId = "wika_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-        dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-          right = TRUE, size = "sm",circle = FALSE,icon = icon("gear"), tooltip = tooltipOptions(title = "Additional Information!"))
+          withSpinner(valueBoxOutput(outputId = "wika_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "wika_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "wika_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
+          withSpinner(valueBoxOutput(outputId = "wika_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
+          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
+                         right = TRUE, size = "sm",circle = FALSE,icon = icon("gear"), tooltip = tooltipOptions(title = "Additional Information!"))
       )
     })
     
@@ -704,707 +738,707 @@ function(input, output, session) {
   
   # Output Plot Basic BBRI---
   
-
-    output$bri <- renderPlotly({
-
-      bbri_area_ploty <- bbri %>%
-        plot_ly(x = ~date,
-                y = ~close,
-                type = 'scatter', 
-                mode = 'lines', 
-                fill = 'tozeroy',
-                fillcolor = 'rgba(0,100,80,0.5)',
-                line = list(color = 'rgba(0,100,80,1)'),
-                name = "Price (Rp)",
-                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
-                hoverinfo = 'text') %>%
-        layout(
-          xaxis = list(
-            title = "Day", 
-            zeroline = F,
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-      
-      bbri_area_ploty
-    })
-
+  
+  output$bri <- renderPlotly({
+    
+    bbri_area_ploty <- bbri %>%
+      plot_ly(x = ~date,
+              y = ~close,
+              type = 'scatter', 
+              mode = 'lines', 
+              fill = 'tozeroy',
+              fillcolor = 'rgba(0,100,80,0.5)',
+              line = list(color = 'rgba(0,100,80,1)'),
+              name = "Price (Rp)",
+              text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+              hoverinfo = 'text') %>%
+      layout(
+        xaxis = list(
+          title = "Day", 
+          zeroline = F,
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    bbri_area_ploty
+  })
+  
   # # Output Plot Adv BBRI---
-
-    output$bri_adv <- renderPlotly({
-
-      bbri_ploty2 <- bbri %>%
-        plot_ly(x = ~date,
-                type = "candlestick",
-                open = ~open,
-                close = ~close,
-                high = ~high,
-                low = ~low,
-                name = "Price (Rp)") %>%
-        layout(
-          xaxis = list(
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-
-      #Membuat bar plot untuk volume saham BRI
-      bbri_ploty3 <- bbri %>%
-        plot_ly(x=~date,
-                y=~volume,
-                type='bar',
-                name = "Volume") %>%
-        layout(yaxis = list(title = "Volume"))
-
-      #Menggabungkan 2 plot menjadi 1 plot
-      bbri_fig <- subplot(bbri_ploty2, bbri_ploty3, heights = c(0.7,0.2), nrows=2,
-                          shareX = TRUE, titleY = TRUE)
-      bbri_fig
-    })
-
+  
+  output$bri_adv <- renderPlotly({
+    
+    bbri_ploty2 <- bbri %>%
+      plot_ly(x = ~date,
+              type = "candlestick",
+              open = ~open,
+              close = ~close,
+              high = ~high,
+              low = ~low,
+              name = "Price (Rp)") %>%
+      layout(
+        xaxis = list(
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    #Membuat bar plot untuk volume saham BRI
+    bbri_ploty3 <- bbri %>%
+      plot_ly(x=~date,
+              y=~volume,
+              type='bar',
+              name = "Volume") %>%
+      layout(yaxis = list(title = "Volume"))
+    
+    #Menggabungkan 2 plot menjadi 1 plot
+    bbri_fig <- subplot(bbri_ploty2, bbri_ploty3, heights = c(0.7,0.2), nrows=2,
+                        shareX = TRUE, titleY = TRUE)
+    bbri_fig
+  })
+  
   # # Output Plot Basic ISAT---
-    output$indosat <- renderPlotly({
-
-      isat_area_ploty <- isat %>%
-        plot_ly(x = ~date,
-                y = ~close,
-                type = 'scatter', 
-                mode = 'lines', 
-                fill = 'tozeroy',
-                fillcolor = 'rgba(0,100,80,0.5)',
-                line = list(color = 'rgba(0,100,80,1)'),
-                name = "Price (Rp)",
-                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
-                hoverinfo = 'text') %>%
-        layout(
-          xaxis = list(
-            title = "Day", 
-            zeroline = F,
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-      
-      isat_area_ploty
-
-    })
-
+  output$indosat <- renderPlotly({
+    
+    isat_area_ploty <- isat %>%
+      plot_ly(x = ~date,
+              y = ~close,
+              type = 'scatter', 
+              mode = 'lines', 
+              fill = 'tozeroy',
+              fillcolor = 'rgba(0,100,80,0.5)',
+              line = list(color = 'rgba(0,100,80,1)'),
+              name = "Price (Rp)",
+              text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+              hoverinfo = 'text') %>%
+      layout(
+        xaxis = list(
+          title = "Day", 
+          zeroline = F,
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    isat_area_ploty
+    
+  })
+  
   # # Output Plot Adv ISAT---
-    output$indosat_adv <- renderPlotly({
-
-      isat_ploty2 <- isat %>%
-        plot_ly(x = ~date,
-                type = "candlestick",
-                open = ~open,
-                close = ~close,
-                high = ~high,
-                low = ~low,
-                name = "Price (Rp)") %>%
-        layout(
-          xaxis = list(
-            rangeselector = list(
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-
-      #Membuat bar plot untuk volume saham BRI
-      isat_ploty3 <- isat %>%
-        plot_ly(x=~date,
-                y=~volume,
-                type='bar',
-                name = "Volume") %>%
-        layout(yaxis = list(title = "Volume"))
-
-      #Menggabungkan 2 plot menjadi 1 plot
-      isat_fig <- subplot(isat_ploty2, isat_ploty3, heights = c(0.7,0.2), nrows=2,
-                          shareX = TRUE, titleY = TRUE)
-      isat_fig
-
-    })
-
+  output$indosat_adv <- renderPlotly({
+    
+    isat_ploty2 <- isat %>%
+      plot_ly(x = ~date,
+              type = "candlestick",
+              open = ~open,
+              close = ~close,
+              high = ~high,
+              low = ~low,
+              name = "Price (Rp)") %>%
+      layout(
+        xaxis = list(
+          rangeselector = list(
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    #Membuat bar plot untuk volume saham BRI
+    isat_ploty3 <- isat %>%
+      plot_ly(x=~date,
+              y=~volume,
+              type='bar',
+              name = "Volume") %>%
+      layout(yaxis = list(title = "Volume"))
+    
+    #Menggabungkan 2 plot menjadi 1 plot
+    isat_fig <- subplot(isat_ploty2, isat_ploty3, heights = c(0.7,0.2), nrows=2,
+                        shareX = TRUE, titleY = TRUE)
+    isat_fig
+    
+  })
+  
   # # Output Plot Basic SIDO---
-    output$sido <- renderPlotly({
-
-      sido_area_ploty <- sido %>%
-        plot_ly(x = ~date,
-                y = ~close,
-                type = 'scatter', 
-                mode = 'lines', 
-                fill = 'tozeroy',
-                fillcolor = 'rgba(0,100,80,0.5)',
-                line = list(color = 'rgba(0,100,80,1)'),
-                name = "Price (Rp)",
-                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
-                hoverinfo = 'text') %>%
-        layout(
-          xaxis = list(
-            title = "Day", 
-            zeroline = F,
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-      
-      sido_area_ploty
-
-    })
+  output$sido <- renderPlotly({
+    
+    sido_area_ploty <- sido %>%
+      plot_ly(x = ~date,
+              y = ~close,
+              type = 'scatter', 
+              mode = 'lines', 
+              fill = 'tozeroy',
+              fillcolor = 'rgba(0,100,80,0.5)',
+              line = list(color = 'rgba(0,100,80,1)'),
+              name = "Price (Rp)",
+              text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+              hoverinfo = 'text') %>%
+      layout(
+        xaxis = list(
+          title = "Day", 
+          zeroline = F,
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    sido_area_ploty
+    
+  })
   
   # # Output Plot Adv SIDO---
-    output$sido_adv <- renderPlotly({
-
-      sido_ploty2 <- sido %>%
-        plot_ly(x = ~date,
-                type = "candlestick",
-                open = ~open,
-                close = ~close,
-                high = ~high,
-                low = ~low,
-                name = "Price (Rp)") %>%
-        layout(
-          xaxis = list(
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-
-      #Membuat bar plot untuk volume saham BRI
-      sido_ploty3 <- sido %>%
-        plot_ly(x=~date,
-                y=~volume,
-                type='bar',
-                name = "Volume") %>%
-        layout(yaxis = list(title = "Volume"))
-
-      #Menggabungkan 2 plot menjadi 1 plot
-      sido_fig <- subplot(sido_ploty2, sido_ploty3, heights = c(0.7,0.2), nrows=2,
-                          shareX = TRUE, titleY = TRUE)
-      sido_fig
-
-    })
-
+  output$sido_adv <- renderPlotly({
+    
+    sido_ploty2 <- sido %>%
+      plot_ly(x = ~date,
+              type = "candlestick",
+              open = ~open,
+              close = ~close,
+              high = ~high,
+              low = ~low,
+              name = "Price (Rp)") %>%
+      layout(
+        xaxis = list(
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    #Membuat bar plot untuk volume saham BRI
+    sido_ploty3 <- sido %>%
+      plot_ly(x=~date,
+              y=~volume,
+              type='bar',
+              name = "Volume") %>%
+      layout(yaxis = list(title = "Volume"))
+    
+    #Menggabungkan 2 plot menjadi 1 plot
+    sido_fig <- subplot(sido_ploty2, sido_ploty3, heights = c(0.7,0.2), nrows=2,
+                        shareX = TRUE, titleY = TRUE)
+    sido_fig
+    
+  })
+  
   # # Output Plot Basic HOKI---
-    output$hoki <- renderPlotly({
-
-      hoki_area_ploty <- hoki %>%
-        plot_ly(x = ~date,
-                y = ~close,
-                type = 'scatter', 
-                mode = 'lines', 
-                fill = 'tozeroy',
-                fillcolor = 'rgba(0,100,80,0.5)',
-                line = list(color = 'rgba(0,100,80,1)'),
-                name = "Price (Rp)",
-                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
-                hoverinfo = 'text') %>%
-        layout(
-          xaxis = list(
-            title = "Day", 
-            zeroline = F,
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-      
-      hoki_area_ploty
-
-    })
-
+  output$hoki <- renderPlotly({
+    
+    hoki_area_ploty <- hoki %>%
+      plot_ly(x = ~date,
+              y = ~close,
+              type = 'scatter', 
+              mode = 'lines', 
+              fill = 'tozeroy',
+              fillcolor = 'rgba(0,100,80,0.5)',
+              line = list(color = 'rgba(0,100,80,1)'),
+              name = "Price (Rp)",
+              text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+              hoverinfo = 'text') %>%
+      layout(
+        xaxis = list(
+          title = "Day", 
+          zeroline = F,
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    hoki_area_ploty
+    
+  })
+  
   # # Output Plot Adv HOKI---
-    output$hoki_adv <- renderPlotly({
-
-      #Membuat candlestick plot
-      hoki_ploty2 <- hoki %>%
-        plot_ly(x = ~date,
-                type = "candlestick",
-                open = ~open,
-                close = ~close,
-                high = ~high,
-                low = ~low,
-                name = "Price (Rp)") %>%
-        layout(
-          xaxis = list(
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-
-      #Membuat bar plot untuk volume saham BRI
-      hoki_ploty3 <- hoki %>%
-        plot_ly(x=~date,
-                y=~volume,
-                type='bar',
-                name = "Volume") %>%
-        layout(yaxis = list(title = "Volume"))
-
-      #Menggabungkan 2 plot menjadi 1 plot
-      hoki_fig <- subplot(hoki_ploty2, hoki_ploty3, heights = c(0.7,0.2), nrows=2,
-                          shareX = TRUE, titleY = TRUE)
-      hoki_fig
-
-    })
-
+  output$hoki_adv <- renderPlotly({
+    
+    #Membuat candlestick plot
+    hoki_ploty2 <- hoki %>%
+      plot_ly(x = ~date,
+              type = "candlestick",
+              open = ~open,
+              close = ~close,
+              high = ~high,
+              low = ~low,
+              name = "Price (Rp)") %>%
+      layout(
+        xaxis = list(
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    #Membuat bar plot untuk volume saham BRI
+    hoki_ploty3 <- hoki %>%
+      plot_ly(x=~date,
+              y=~volume,
+              type='bar',
+              name = "Volume") %>%
+      layout(yaxis = list(title = "Volume"))
+    
+    #Menggabungkan 2 plot menjadi 1 plot
+    hoki_fig <- subplot(hoki_ploty2, hoki_ploty3, heights = c(0.7,0.2), nrows=2,
+                        shareX = TRUE, titleY = TRUE)
+    hoki_fig
+    
+  })
+  
   # # Output Plot Basic WIKA---
-    output$wika <- renderPlotly({
-
-      wika_area_ploty <- wika %>%
-        plot_ly(x = ~date,
-                y = ~close,
-                type = 'scatter', 
-                mode = 'lines', 
-                fill = 'tozeroy',
-                fillcolor = 'rgba(0,100,80,0.5)',
-                line = list(color = 'rgba(0,100,80,1)'),
-                name = "Price (Rp)",
-                text = ~paste("Date: ", date, "<br>Close: Rp", close), 
-                hoverinfo = 'text') %>%
-        layout(
-          xaxis = list(
-            title = "Day", 
-            zeroline = F,
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       zeroline = FALSE,
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-      
-      wika_area_ploty
-
-    })
-
+  output$wika <- renderPlotly({
+    
+    wika_area_ploty <- wika %>%
+      plot_ly(x = ~date,
+              y = ~close,
+              type = 'scatter', 
+              mode = 'lines', 
+              fill = 'tozeroy',
+              fillcolor = 'rgba(0,100,80,0.5)',
+              line = list(color = 'rgba(0,100,80,1)'),
+              name = "Price (Rp)",
+              text = ~paste("Date: ", date, "<br>Close: Rp", close), 
+              hoverinfo = 'text') %>%
+      layout(
+        xaxis = list(
+          title = "Day", 
+          zeroline = F,
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     zeroline = FALSE,
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    wika_area_ploty
+    
+  })
+  
   # # Output Plot Adv WIKA---
-    output$wika_adv <- renderPlotly({
-
-      wika_ploty2 <- wika %>%
-        plot_ly(x = ~date,
-                type = "candlestick",
-                open = ~open,
-                close = ~close,
-                high = ~high,
-                low = ~low,
-                name = "Price (Rp)") %>%
-        layout(
-          xaxis = list(
-            rangeselector = list( 
-              buttons = list(
-                list(
-                  count = 1,
-                  label = "1 Day",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 5,
-                  label = "5 Days",
-                  step = "day",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Month",
-                  step = "week",
-                  stepmode = "backward"),
-                list(
-                  count = 3,
-                  label = "3 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 6,
-                  label = "6 Months",
-                  step = "month",
-                  stepmode = "backward"),
-                list(
-                  count = 1,
-                  label = "1 Year",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  count = 2,
-                  label = "2 Years",
-                  step = "year",
-                  stepmode = "backward"),
-                list(
-                  label = "Max",
-                  step = "all"))),
-            rangeslider = list(visible = FALSE)),
-          yaxis = list(title = "Price (Rp)",
-                       showgrid = TRUE,
-                       showticklabels = TRUE))
-
-      #Membuat bar plot untuk volume saham BRI
-      wika_ploty3 <- wika %>%
-        plot_ly(x=~date,
-                y=~volume,
-                type='bar',
-                name = "Volume") %>%
-        layout(yaxis = list(title = "Volume"))
-
-      #Menggabungkan 2 plot menjadi 1 plot
-      wika_fig <- subplot(wika_ploty2, wika_ploty3, heights = c(0.7,0.2), nrows=2,
-                          shareX = TRUE, titleY = TRUE)
-      wika_fig
-
-    })
-
+  output$wika_adv <- renderPlotly({
+    
+    wika_ploty2 <- wika %>%
+      plot_ly(x = ~date,
+              type = "candlestick",
+              open = ~open,
+              close = ~close,
+              high = ~high,
+              low = ~low,
+              name = "Price (Rp)") %>%
+      layout(
+        xaxis = list(
+          rangeselector = list( 
+            buttons = list(
+              list(
+                count = 1,
+                label = "1 Day",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 5,
+                label = "5 Days",
+                step = "day",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Month",
+                step = "week",
+                stepmode = "backward"),
+              list(
+                count = 3,
+                label = "3 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 6,
+                label = "6 Months",
+                step = "month",
+                stepmode = "backward"),
+              list(
+                count = 1,
+                label = "1 Year",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                count = 2,
+                label = "2 Years",
+                step = "year",
+                stepmode = "backward"),
+              list(
+                label = "Max",
+                step = "all"))),
+          rangeslider = list(visible = FALSE)),
+        yaxis = list(title = "Price (Rp)",
+                     showgrid = TRUE,
+                     showticklabels = TRUE))
+    
+    #Membuat bar plot untuk volume saham BRI
+    wika_ploty3 <- wika %>%
+      plot_ly(x=~date,
+              y=~volume,
+              type='bar',
+              name = "Volume") %>%
+      layout(yaxis = list(title = "Volume"))
+    
+    #Menggabungkan 2 plot menjadi 1 plot
+    wika_fig <- subplot(wika_ploty2, wika_ploty3, heights = c(0.7,0.2), nrows=2,
+                        shareX = TRUE, titleY = TRUE)
+    wika_fig
+    
+  })
+  
   #------------------------------  
   #NAV BAR TAB PANEL PORTFOLIO-GAINLOSS SIMULATOR--- 
   
@@ -1425,7 +1459,7 @@ function(input, output, session) {
              padding:15px;
              border-radius:10px;
              border-size:15px",
-      HTML(paste("<b><center><u>PLEASE SELECT ONE STOCK TO BE CALCULATE</b></center></u>")))
+        HTML(paste("<b><center><u>PLEASE SELECT ONE STOCK TO BE CALCULATE</b></center></u>")))
   })
   
   output$text3 <- renderUI({
@@ -1443,49 +1477,49 @@ function(input, output, session) {
   
   output$calender <- renderUI({
     
-        dateRangeInput(width = "1500px",
-                inputId = "date_select",
-                label = NULL,
-                start = "2018-01-02",
-                end = "2021-06-30",
-                min = "2018-01-01",
-                max = "2023-12-31")
+    dateRangeInput(width = "1500px",
+                   inputId = "date_select",
+                   label = NULL,
+                   start = "2018-01-02",
+                   end = "2021-06-30",
+                   min = "2018-01-01",
+                   max = "2023-12-31")
   })
   
   observeEvent(input$bbri.jk2, {
     output$date_selection <- renderUI({
-
+      
       dateRangeInput(width = "1500px",
-              inputId = "date_select",
-              label = NULL,
-              start = "2018-01-02",
-              end = "2021-06-30",
-              min = "2018-01-01",
-              max = "2023-12-31")
+                     inputId = "date_select",
+                     label = NULL,
+                     start = "2018-01-02",
+                     end = "2021-06-30",
+                     min = "2018-01-01",
+                     max = "2023-12-31")
     })
-
+    
     output$comparison_with_ml <- renderUI({
       div(
         HTML(paste("<b><center><u>BBRI PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        tags$head(tags$style(HTML(".small-box {height: 95px}"))),
-        valueBoxOutput(outputId = "bbri_buy_sig", width = 4),
-        valueBoxOutput(outputId = "bbri_sell_sig", width = 4),
-        valueBoxOutput(outputId = "bbri_hold_sig",width = 4),
-        valueBoxOutput(outputId = "bbri_modal", width = 6),
-        valueBoxOutput(outputId = "bbri_total", width = 6))
+          tags$head(tags$style(HTML(".small-box {height: 95px}"))),
+          valueBoxOutput(outputId = "bbri_buy_sig", width = 4),
+          valueBoxOutput(outputId = "bbri_sell_sig", width = 4),
+          valueBoxOutput(outputId = "bbri_hold_sig",width = 4),
+          valueBoxOutput(outputId = "bbri_modal", width = 6),
+          valueBoxOutput(outputId = "bbri_total", width = 6))
       )
     })
-
+    
     output$comparison_wo_ml <- renderUI({
       div(
         HTML(paste("<b><center><u>BBRI PROFIT/LOSS CALCULATION WITHOUT MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "bbri_buy_sig2", width = 4),
-        valueBoxOutput(outputId = "bbri_sell_sig2", width = 4),
-        valueBoxOutput(outputId = "bbri_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "bbri_modal2", width = 6),
-        valueBoxOutput(outputId = "bbri_total2", width = 6))
+          valueBoxOutput(outputId = "bbri_buy_sig2", width = 4),
+          valueBoxOutput(outputId = "bbri_sell_sig2", width = 4),
+          valueBoxOutput(outputId = "bbri_hold_sig2", width = 4),
+          valueBoxOutput(outputId = "bbri_modal2", width = 6),
+          valueBoxOutput(outputId = "bbri_total2", width = 6))
       )
     })
     
@@ -1493,7 +1527,7 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>BBRI BUY/SELL HISTORY WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidPage(
-        withSpinner(dataTableOutput("bbri_history"), type = 8,size = 0.5)))
+          withSpinner(dataTableOutput("bbri_history"), type = 8,size = 0.5)))
     })
     
     output$history_wo_ml <- renderUI({
@@ -1502,31 +1536,31 @@ function(input, output, session) {
         fluidPage(
           withSpinner(dataTableOutput("bbri_history2"), type = 8,size = 0.5)))
     })
-
+    
   }, ignoreNULL = FALSE)
   
   output$bbri_buy_sig<- renderInfoBox({
-
+    
     bbri_total_buy <- bbri_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(stock_sell != 0) %>%
       summarise(total_buy = sum(stock_sell))
-
+    
     valueBox(color = "aqua",
              value = bbri_total_buy,
              subtitle = "Total Buy Signal",
              icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
-
+  
   output$bbri_sell_sig<- renderValueBox({
-
+    
     bbri_total_sell <- bbri_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(stock_sell != 0) %>%
       select("stock_sell") %>%
       summarise(freq = n())
-
+    
     valueBox(color = "aqua",
              value = bbri_total_sell,
              subtitle = "Total Sell Signal",
@@ -1534,15 +1568,15 @@ function(input, output, session) {
              icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
-
+  
   output$bbri_hold_sig<- renderValueBox({
-
+    
     bbri_total_hold <- bbri_suggestion %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(pred_dt == "Hold") %>%
       select("pred_dt") %>%
       summarise(freq = n())
-
+    
     valueBox(color = "aqua",
              value = bbri_total_hold,
              subtitle = "Total Hold Signal",
@@ -1550,7 +1584,7 @@ function(input, output, session) {
              icon = tags$i(icon("fas fa-clipboard-list"), style = "font-size: 50px")
     )
   })
-
+  
   output$bbri_modal<- renderValueBox({
     
     bbri_total_modal <- bbri_dt_backtest %>%
@@ -1569,14 +1603,14 @@ function(input, output, session) {
   })
   
   output$bbri_total<- renderValueBox({
-
+    
     bbri_total_profit <- bbri_dt_backtest %>%
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>%
       filter(profit != 0 & profit != "NaN") %>%
       summarise(total_profit = sum(profit))
     
     bbri_total_profit$total_profit <- format(round(as.numeric(bbri_total_profit$total_profit), 1), big.mark=",")
-
+    
     valueBox(color = ifelse( bbri_total_profit > 0, 'green', 'red' ),
              value = paste("Rp.", bbri_total_profit),
              subtitle = "Total Profit",
@@ -1762,11 +1796,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>ISAT PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(  
-        valueBoxOutput(outputId = "isat_buy_sig", width = 4),
-        valueBoxOutput(outputId = "isat_sell_sig", width = 4),
-        valueBoxOutput(outputId = "isat_hold_sig", width = 4),
-        valueBoxOutput(outputId = "isat_modal", width = 6),
-        valueBoxOutput(outputId = "isat_total", width = 6))
+          valueBoxOutput(outputId = "isat_buy_sig", width = 4),
+          valueBoxOutput(outputId = "isat_sell_sig", width = 4),
+          valueBoxOutput(outputId = "isat_hold_sig", width = 4),
+          valueBoxOutput(outputId = "isat_modal", width = 6),
+          valueBoxOutput(outputId = "isat_total", width = 6))
       )
     })
     
@@ -1774,11 +1808,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>ISAT PROFIT/LOSS CALCULATION WITHOUT MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "isat_buy_sig2", width = 4),
-        valueBoxOutput(outputId = "isat_sell_sig2", width = 4),
-        valueBoxOutput(outputId = "isat_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "isat_modal2", width = 6),
-        valueBoxOutput(outputId = "isat_total2", width = 6))
+          valueBoxOutput(outputId = "isat_buy_sig2", width = 4),
+          valueBoxOutput(outputId = "isat_sell_sig2", width = 4),
+          valueBoxOutput(outputId = "isat_hold_sig2", width = 4),
+          valueBoxOutput(outputId = "isat_modal2", width = 6),
+          valueBoxOutput(outputId = "isat_total2", width = 6))
       )
     })
     
@@ -2054,11 +2088,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>SIDO PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "sido_buy_sig", width = 4),
-        valueBoxOutput(outputId = "sido_sell_sig", width = 4),
-        valueBoxOutput(outputId = "sido_hold_sig", width = 4),
-        valueBoxOutput(outputId = "sido_modal", width = 6),
-        valueBoxOutput(outputId = "sido_total", width = 6))
+          valueBoxOutput(outputId = "sido_buy_sig", width = 4),
+          valueBoxOutput(outputId = "sido_sell_sig", width = 4),
+          valueBoxOutput(outputId = "sido_hold_sig", width = 4),
+          valueBoxOutput(outputId = "sido_modal", width = 6),
+          valueBoxOutput(outputId = "sido_total", width = 6))
       )
     })
     
@@ -2066,11 +2100,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>SIDO PROFIT/LOSS CALCULATION WITHOUT MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "sido_buy_sig2", width = 4),
-        valueBoxOutput(outputId = "sido_sell_sig2", width = 4),
-        valueBoxOutput(outputId = "sido_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "sido_modal2", width = 6),
-        valueBoxOutput(outputId = "sido_total2", width = 6))
+          valueBoxOutput(outputId = "sido_buy_sig2", width = 4),
+          valueBoxOutput(outputId = "sido_sell_sig2", width = 4),
+          valueBoxOutput(outputId = "sido_hold_sig2", width = 4),
+          valueBoxOutput(outputId = "sido_modal2", width = 6),
+          valueBoxOutput(outputId = "sido_total2", width = 6))
       )
     })
     
@@ -2345,11 +2379,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>HOKI PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "hoki_buy_sig", width = 4),
-        valueBoxOutput(outputId = "hoki_sell_sig", width = 4),
-        valueBoxOutput(outputId = "hoki_hold_sig", width = 4),
-        valueBoxOutput(outputId = "hoki_modal", width = 6),
-        valueBoxOutput(outputId = "hoki_total", width = 6))
+          valueBoxOutput(outputId = "hoki_buy_sig", width = 4),
+          valueBoxOutput(outputId = "hoki_sell_sig", width = 4),
+          valueBoxOutput(outputId = "hoki_hold_sig", width = 4),
+          valueBoxOutput(outputId = "hoki_modal", width = 6),
+          valueBoxOutput(outputId = "hoki_total", width = 6))
       )
     })
     
@@ -2357,11 +2391,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>HOKI PROFIT/LOSS CALCULATION WITHOUT MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "hoki_buy_sig2", width = 4),
-        valueBoxOutput(outputId = "hoki_sell_sig2", width = 4),
-        valueBoxOutput(outputId = "hoki_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "hoki_modal2", width = 6),
-        valueBoxOutput(outputId = "hoki_total2", width = 6))
+          valueBoxOutput(outputId = "hoki_buy_sig2", width = 4),
+          valueBoxOutput(outputId = "hoki_sell_sig2", width = 4),
+          valueBoxOutput(outputId = "hoki_hold_sig2", width = 4),
+          valueBoxOutput(outputId = "hoki_modal2", width = 6),
+          valueBoxOutput(outputId = "hoki_total2", width = 6))
       )
     })
     
@@ -2402,7 +2436,7 @@ function(input, output, session) {
       filter(stock_sell != 0) %>%
       select("stock_sell") %>%
       summarise(freq = n())
-
+    
     valueBox(color = "aqua",
              value = hoki_total_sell,
              subtitle = "Total Sell Signal",
@@ -2636,11 +2670,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>WIKA PROFIT/LOSS CALCULATION WITH MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "wika_buy_sig", width = 4),
-        valueBoxOutput(outputId = "wika_sell_sig", width = 4),
-        valueBoxOutput(outputId = "wika_hold_sig", width = 4),
-        valueBoxOutput(outputId = "wika_modal", width = 6),
-        valueBoxOutput(outputId = "wika_total", width = 6))
+          valueBoxOutput(outputId = "wika_buy_sig", width = 4),
+          valueBoxOutput(outputId = "wika_sell_sig", width = 4),
+          valueBoxOutput(outputId = "wika_hold_sig", width = 4),
+          valueBoxOutput(outputId = "wika_modal", width = 6),
+          valueBoxOutput(outputId = "wika_total", width = 6))
       )
     })
     
@@ -2648,11 +2682,11 @@ function(input, output, session) {
       div(
         HTML(paste("<b><center><u>WIKA PROFIT/LOSS CALCULATION WITHOUT MACHINE LEARNING :</b></center></u><br>")),
         fluidRow(
-        valueBoxOutput(outputId = "wika_buy_sig2", width = 4),
-        valueBoxOutput(outputId = "wika_sell_sig2", width = 4),
-        valueBoxOutput(outputId = "wika_hold_sig2", width = 4),
-        valueBoxOutput(outputId = "wika_modal2", width = 6),
-        valueBoxOutput(outputId = "wika_total2", width = 6))
+          valueBoxOutput(outputId = "wika_buy_sig2", width = 4),
+          valueBoxOutput(outputId = "wika_sell_sig2", width = 4),
+          valueBoxOutput(outputId = "wika_hold_sig2", width = 4),
+          valueBoxOutput(outputId = "wika_modal2", width = 6),
+          valueBoxOutput(outputId = "wika_total2", width = 6))
       )
     })
     
@@ -2912,5 +2946,3 @@ function(input, output, session) {
   })
   
 }
-
-

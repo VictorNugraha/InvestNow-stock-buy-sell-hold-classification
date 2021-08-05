@@ -1,6 +1,4 @@
 #NAV BAR---
-introjsUI()
-theme <- bslib::bs_theme(version = 4)
 fluidPage(
   list(tags$head(HTML('<link rel="icon", href="MyIcon.png", 
                                    type="image/png" />'))),
@@ -9,55 +7,60 @@ fluidPage(
         title="", windowTitle="InvestNow"
       )
   ),
-navbarPage(
-          #Title---
-          title = div(img(src="stock-market.png", 
-                           height = '40px', 
-                           width = '40px'), 
-                       "InvestNow"),
-           #Theme bootswatch---
-           theme = bs_theme(bootswatch = "litera",
-                            # bg = "#002B36",
-                            # fg = "white",
-                            base_font = font_google("Prompt"),
-                            code_font = font_google("JetBrains Mono")
-                            
-                            ),
-           #ID NavBar---
-           id = "inTabset",
-          
-          header = tagList(useShinydashboard()),
-          
-#------------------------------
-#NAV BAR MENU PANEL ABOUT PAGE---   
-           navbarMenu("About",
-            
-             # Tab Panel About - Home---          
-             tabPanel(title = "Home",
+  
+  introjsUI(),
+  useShinyjs(),
+  
+  navbarPage(
+    #Title---
+    title = div(img(src="stock-market.png", 
+                    height = '40px', 
+                    width = '40px'), 
+                "InvestNow"),
+    #Theme bootswatch---
+    theme = bs_theme(bootswatch = "litera",
+                     # bg = "#002B36",
+                     # fg = "white",
+                     base_font = font_google("Prompt"),
+                     code_font = font_google("JetBrains Mono")
+                     
+    ),
+    
+    #ID NavBar---
+    id = "inTabset",
+    
+    header = tagList(useShinydashboard()),
+    
+    #------------------------------
+    #NAV BAR MENU PANEL ABOUT PAGE---   
+    navbarMenu("About",
+               
+               # Tab Panel About - Home---          
+               tabPanel(title = "Home",
                         fluidRow(
-                            #Slide Photo Output---
-                            slickROutput("slide_show", 
-                                         width ="1100px",
-                                         height = "300px")
-                            ),
-                            #Render image below slide photo---
-                            imageOutput("image"),
-                            #Action button to go to How We Helps panel---
-                            column(
-                              width = 12,
-                            actionButton(inputId = 'jumpToHowWeHelps', 
-                                         label = 'How We Helps',
-                                         style = "color: black; 
+                          #Slide Photo Output---
+                          slickROutput("slide_show", 
+                                       width ="1100px",
+                                       height = "300px")
+                        ),
+                        #Render image below slide photo---
+                        imageOutput("image"),
+                        #Action button to go to How We Helps panel---
+                        column(
+                          width = 12,
+                          actionButton(inputId = 'jumpToHowWeHelps', 
+                                       label = 'How We Helps',
+                                       style = "color: black; 
                                                   background-color: whitesmoke; 
                                                   border-color: whitesmoke"),
-                              align = "center",
-                              style = "margin-bottom: 10px;",
-                              style = "margin-top: -10px;")
-                        ),
+                          align = "center",
+                          style = "margin-bottom: 10px;",
+                          style = "margin-top: -10px;")
+               ),
                
-              # Tab Panel About - How We Helps---       
-              tabPanel(title = "How We Helps",
-                       value = "how_we_helps",
+               # Tab Panel About - How We Helps---       
+               tabPanel(title = "How We Helps",
+                        value = "how_we_helps",
                         fluidRow(
                           # Image How InvestNow Works
                           imageOutput("image2",
@@ -108,9 +111,9 @@ navbarPage(
                                   <br><b>- Pharmacy </b>: <a href= https://investor.sidomuncul.co.id/id/understanding_sido.html> PT. Industri Jamu Dan Farmasi Sido Muncul, TBK.</a>
                                   <br><b>- Infrastructure </b>: <a href= https://wika.co.id/id/#> PT. Wijaya Karya (Persero), TBK.</a>
                                   "
-                                  )
                                 )
-                              ),
+                              )
+                            ),
                             width = 10
                           ),
                           
@@ -138,9 +141,9 @@ navbarPage(
                                       The suggestion which based on technical analysis will be used as a data train to the system, in this case the system is a machine learning model. Not just to
                                       train the machine learning model, it can also be used to improve their performance based on experience, just as humans do.
                                       "
-                                      )
-                                    )
-                                  ),
+                                )
+                              )
+                            ),
                             width = 10
                           ),
                           
@@ -205,9 +208,9 @@ navbarPage(
                                       <br><b>- Moving Average Convergence Divergence (MACD) </b>
                                       <br><b>- Relative Strength Index (RSI) </b>
                                       "
-                                      )
-                                    )
-                                  ),
+                                )
+                              )
+                            ),
                             width = 10
                           ),
                           
@@ -257,173 +260,159 @@ navbarPage(
                             width = 2
                           ),
                         )
-                      )
-                    ),
-
-#------------------------------
-#NAV BAR TAB PANEL PORTOFOLIO---
-           
-             # Tab Panel Portfolio - Trading Assistance--- 
-              navbarMenu("Portfolio",
-                tabPanel(title = "Trading Assitance",
-                         value = 'trading',
-                         fluidRow(
-                           useShinyjs(),
-                           column(width = 12, uiOutput("text1")),
-                           column(width = 12,
-                           br(),
-                           actionButton(inputId = 'bbri.jk',
-                                        icon = icon("bank"),
-                                        label = strong('BBRI'),
-                                        style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                           actionButton(inputId = 'isat.jk',
-                                        icon("phone"),
-                                        label = strong('ISAT'),
-                                        style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                           actionButton(inputId = 'sidomuncul',
-                                        icon = icon("flask", class = "flask-box"),
-                                        label = strong('SIDO'),
-                                        style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                           actionButton(inputId = 'hokiberas',
-                                        icon = icon("shopping-cart"),
-                                        label = strong('HOKI'),
-                                        style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                           actionButton(inputId = 'wijayakarya',
-                                        icon = icon("road"),
-                                        label = strong('WIKA'),
-                                        style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                           align = "center",
-                           style = "margin-bottom: 10px;",
-                           style = "margin-top: -10px;",
-                           br()
-                            ),
-
-                           fluidPage(
-                             fluidRow(
-                             box(
-                               collapsible = F,
-                               width = 9,
-                               uiOutput("plot_output")),
-                             box(
-                              collapsible = T,
-                              width = 3,
-                              uiOutput("suggestion"))
-                                )
-                              )
-                            )
-                         ),
-
-           # Tab Panel Portfolio - G/L Simulator---     
-           tabPanel(title = "G/L Simulator",
-                    fluidRow(
-                      useShinyjs(),
-                      column(width = 12, uiOutput("text2")),
-                      column(width = 12,
-                             br(),
-                             actionButton(inputId = 'bbri.jk2',
-                                          icon = icon("bank"),
-                                          label = strong('BBRI'),
-                                          style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                             actionButton(inputId = 'isat.jk2',
-                                          icon("phone"),
-                                          label = strong('ISAT'),
-                                          style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                             actionButton(inputId = 'sidomuncul2',
-                                          icon = icon("flask", class = "flask-box"),
-                                          label = strong('SIDO'),
-                                          style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                             actionButton(inputId = 'hokiberas2',
-                                          icon = icon("shopping-cart"),
-                                          label = strong('HOKI'),
-                                          style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                             actionButton(inputId = 'wijayakarya2',
-                                          icon = icon("road"),
-                                          label = strong('WIKA'),
-                                          style = "color: black;
-                                                  background-color: whitesmoke;
-                                                  border-color: whitesmoke"),
-                             align = "center",
-                             style = "margin-bottom: 10px;",
-                             style = "margin-top: -10px;",
-                             br()
-                      ),
-                      
-                      fluidPage(
-                        fluidRow(column(width = 12, uiOutput("text3"))),
+               )
+    ),
+    
+    #------------------------------
+    #NAV BAR TAB PANEL PORTOFOLIO---
+    
+    # Tab Panel Portfolio - Trading Assistance--- 
+    navbarMenu("Portfolio",
+               tabPanel(title = "Trading Assitance",
+                        value = 'trading',
                         fluidRow(
-                          column(width = 4),
-                          column(width = 4, uiOutput("calender")),
-                          column(width = 4)
-                        ),
-                        fluidRow(
-                          box(
-                            collapsible = T,
-                            width = 6,
-                            uiOutput("comparison_with_ml")
-                            ),
-                          box(
-                            collapsible = T,
-                            width = 6,
-                            uiOutput("comparison_wo_ml")
-                            ),
-                          box(
-                            collapsible = T,
-                            width = 6,
-                            uiOutput("history_with_ml")
+                          column(width = 12, uiOutput("modal_dialog")),
+                          column(width = 12, uiOutput("text1")),
+                          column(width = 12,
+                                 br(),
+                                 introBox(
+                                 actionButton(inputId = 'bbri.jk',
+                                              icon = icon("bank"),
+                                              label = strong('BBRI'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'isat.jk',
+                                              icon("phone"),
+                                              label = strong('ISAT'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'sidomuncul',
+                                              icon = icon("flask", class = "flask-box"),
+                                              label = strong('SIDO'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'hokiberas',
+                                              icon = icon("shopping-cart"),
+                                              label = strong('HOKI'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'wijayakarya',
+                                              icon = icon("road"),
+                                              label = strong('WIKA'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),data.step = 1,data.intro = "This is slider its doing xyz"),
+                                 align = "center",
+                                 style = "margin-bottom: 10px;",
+                                 style = "margin-top: -10px;",
+                                 br()
                           ),
-                          box(
-                            collapsible = T,
-                            width = 6,
-                            uiOutput("history_wo_ml")
+                          
+                          fluidPage(
+                            fluidRow(
+                              box(
+                                collapsible = F,
+                                width = 9,
+                                uiOutput("plot_output")),
+                              box(
+                                collapsible = T,
+                                width = 3,
+                                uiOutput("suggestion"))
+                            )
                           )
                         )
-                      )
-                    )
-                  )
-                ),
-
-#------------------------------
-#NAV BAR TAB PANEL PROFILE---  
-           # tabPanel(title = "Profile",
-           #          "Profile"),
-
-#------------------------------
-#FOOTER--- 
-div(class = "footer",
-    includeHTML("html/footer2.Rhtml")
+               ),
+               
+               # Tab Panel Portfolio - G/L Simulator---     
+               tabPanel(title = "G/L Simulator",
+                        fluidRow(
+                          column(width = 12, uiOutput("text2")),
+                          column(width = 12,
+                                 br(),
+                                 introBox(
+                                 actionButton(inputId = 'bbri.jk2',
+                                              icon = icon("bank"),
+                                              label = strong('BBRI'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'isat.jk2',
+                                              icon("phone"),
+                                              label = strong('ISAT'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'sidomuncul2',
+                                              icon = icon("flask", class = "flask-box"),
+                                              label = strong('SIDO'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'hokiberas2',
+                                              icon = icon("shopping-cart"),
+                                              label = strong('HOKI'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),
+                                 actionButton(inputId = 'wijayakarya2',
+                                              icon = icon("road"),
+                                              label = strong('WIKA'),
+                                              style = "color: black;
+                                                  background-color: whitesmoke;
+                                                  border-color: whitesmoke"),data.step = 5,data.intro = "This is slider its doing xyz"),
+                                 align = "center",
+                                 style = "margin-bottom: 10px;",
+                                 style = "margin-top: -10px;",
+                                 br()
+                          ),
+                          
+                          fluidPage(
+                            fluidRow(column(width = 12, uiOutput("text3"))),
+                            fluidRow(
+                              column(width = 4),
+                              column(width = 4, introBox(uiOutput("calender"),data.step = 6,data.intro = "This is slider its doing xyz")),
+                              column(width = 4)
+                            ),
+                            fluidRow(
+                              box(
+                                collapsible = T,
+                                width = 6,
+                                introBox(uiOutput("comparison_with_ml"), data.step = 7,data.intro = "This is slider its doing xyz")
+                              ),
+                              box(
+                                collapsible = T,
+                                width = 6,
+                                introBox(uiOutput("comparison_wo_ml"),data.step = 8,data.intro = "This is slider its doing xyz")
+                              ),
+                              box(
+                                collapsible = T,
+                                width = 6,
+                                introBox(uiOutput("history_with_ml"),data.step = 9,data.intro = "This is slider its doing xyz")
+                              ),
+                              box(
+                                collapsible = T,
+                                width = 6,
+                                introBox(uiOutput("history_wo_ml"),data.step = 10,data.intro = "This is slider its doing xyz")
+                              )
+                            )
+                          )
+                        )
+               )
+    ),
+    
+    #------------------------------
+    #NAV BAR TAB PANEL PROFILE---  
+    # tabPanel(title = "Profile",
+    #          "Profile"),
+    
+    #------------------------------
+    #FOOTER--- 
+    div(class = "footer",
+        includeHTML("html/footer2.Rhtml")
     )
   )
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
