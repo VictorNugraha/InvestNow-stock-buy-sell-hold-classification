@@ -273,7 +273,8 @@ fluidPage(
                         fluidRow(
                           column(width = 12, uiOutput("modal_dialog")),
                           column(width = 12, uiOutput("text1")),
-                          column(width = 12,
+                          column(width = 3),
+                          column(width = 6,
                                  br(),
                                  introBox(
                                  actionButton(inputId = 'bbri.jk',
@@ -305,7 +306,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 1, data.intro = "<center><b>Trading Assitance Section</b></center><br><small>Please select one of this button to observe other stock.</small>"),
+                                                  border-color: whitesmoke"),data.step = 1, data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -329,9 +330,10 @@ fluidPage(
                
                # Tab Panel Portfolio - G/L Simulator---     
                tabPanel(title = "G/L Simulator",
-                        fluidRow(
+                        fluidRow(introBox(data.position = "right", data.step = 5, data.intro = "<center><b><u>G/L Simulator Section</b></u></center><br><small><center>Now we will start introduction tour at <b><i>G/L Simulator</b></i> section.</center></small>"),
                           column(width = 12, uiOutput("text2")),
-                          column(width = 12,
+                          column(width = 3),
+                          column(width = 6,
                                  br(),
                                  introBox(
                                  actionButton(inputId = 'bbri.jk2',
@@ -363,7 +365,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 5, data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Please select one of this button to observe other stock.</small>"),
+                                                  border-color: whitesmoke"),data.step = 6, data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -374,43 +376,43 @@ fluidPage(
                             fluidRow(column(width = 12, uiOutput("text3"))),
                             fluidRow(
                               column(width = 4),
-                              column(width = 4, introBox(uiOutput("calender"),data.step =6,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Please select start and end date to see profit earned from range of time.</small>")),
+                              column(width = 4, introBox(uiOutput("calender"),data.step =7,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select start and end date to see profit earned from that range of time.</small>")),
                               column(width = 4)
                             ),
                             fluidRow(
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("comparison_with_ml"), data.step = 7,
-                                         data.intro = "<center><b>G/L Simulator Section</b></center><br><small>In this section will be shown result with Machine Learning assitance.
-                                         <br>- Total Buy Signal: Indicates 1 stock will be buy at Opening Price.
-                                         <br>- Total Sell Signal: Indicates all the stock bought from accumulated from previous buy singal will be sell at the Closing Price.
-                                         <br>- Total Hold: Indicates to hold position.
-                                         <br>- Total Modal: Total modal issued to buy stocks.
-                                         <br>- Total Profit: Total profit you get. 
-                                         </small>")
+                                introBox(uiOutput("comparison_with_ml"), data.step = 8,
+                                         data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>G/L Simulator Section</u></b></center><br><small>In this section will be shown result with Machine Learning assitance.
+                                         <br><b><i>- Total Buy Signal:</b></i> Indicates 1 stock will be buy at Opening Price.
+                                         <br><b><i>- Total Sell Signal:</b></i> Indicates all the stock bought from accumulated from previous buy singal will be sell at the Closing Price.
+                                         <br><b><i>- Total Hold:</b></i> Total hold signal
+                                         <br><b><i>- Total Modal:</b></i> Total modal issued to buy stocks.
+                                         <br><b><i>- Total Profit:</b></i> Total profit you get. 
+                                         </small>"))))
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("comparison_wo_ml"),data.step = 8,
-                                         data.intro = "<center><b>G/L Simulator Section</b></center><br><small>In this section will be shown result without Machine Learning assitance.
-                                         <br>- Total Buy Signal: Indicates 10 stock will be buy at Opening Price based on input date.
-                                         <br>- Total Sell Signal: Indicates all the stock bought will be sell at the Closing Price based on end date.
-                                         <br>- Total Hold: Indicates to hold position.
-                                         <br>- Total Modal: Total modal issued to buy stocks.
-                                         <br>- Total Profit: Total profit you get. 
-                                         </small>")
+                                introBox(uiOutput("comparison_wo_ml"),data.step = 9,
+                                         data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>G/L Simulator Section</u></b></center><br><small>In this section will be shown result without Machine Learning assitance.
+                                         <br><b><i>- Total Buy Signal:</b></i> Indicates 10 stock will be buy at Opening Price based on input date.
+                                         <br><b><i>- Total Sell Signal:</b></i> Indicates all the stock bought will be sell at the Closing Price based on end date.
+                                         <br><b><i>- Total Hold:</b></i> Total hold signal.
+                                         <br><b><i>- Total Modal:</b></i> Total modal issued to buy stocks.
+                                         <br><b><i>- Total Profit:</b></i> Total profit you get. 
+                                         </small>"))))
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("history_with_ml"),data.step = 9,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Trading history with Machine Learning.</small>")
+                                introBox(uiOutput("history_with_ml"), data.position = "right", data.step = 10,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history with Machine Learning.</small>")
                               ),
                               box(
                                 collapsible = T,
                                 width = 6,
-                                introBox(uiOutput("history_wo_ml"),data.step = 10,data.intro = "<center><b>G/L Simulator Section</b></center><br><small>Trading history without Machine Learning.</small>")
+                                introBox(uiOutput("history_wo_ml"), data.position = "left", data.step = 11,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history without Machine Learning.</small>")
                               )
                             )
                           )

@@ -98,7 +98,10 @@ function(input, output, session) {
     removeModal()
   })
   
-  observeEvent(input$intro,introjs(session, events = list(onbeforechange = readCallback("switchTabs"))))
+  observeEvent(input$intro,introjs(session, events = list(onbeforechange = readCallback("switchTabs")),
+                                            options = list("nextLabel" = "Continue",
+                                                           "prevLabel" = "Previous",
+                                                           "doneLabel" = "Alright. Let's go")))
   
   #------------------------------  
   #NAV BAR TAB PANEL PORTFOLIO-TRADING ASSISTANCE---    
@@ -137,26 +140,26 @@ function(input, output, session) {
                      span(textOutput("price_bbri2"), style = "font-size: 25px"), 
                      textOutput("date_bbri2"), 
                      withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
-          ),data.step = 2,data.intro = "<center><b>Trading Assitance Section</b></center><br> <small>Please choose the more convenient one of the plots below to see the development of stock prices.</small>"),
+          ), data.position = "right", data.step = 2,data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>Trading Assitance Section</u></b></center><br><small>Please choose the more convenient plot from one of the plots below to see the movement of stock prices.</small>")))),
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
           tags$head(tags$style(HTML(".small-box {height: 95px}"))),
-          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "<center><b>Trading Assitance Section</b></center><br><small>This box will show the suggestion from the Machine Learning.<br>- Buy (Green Background Color)<br>- Sell (Red Background Color)<br>- Hold (Yellow Background Color)</small>"),
+          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>This box will show the suggestion from the Machine Learning.<br><b><i>- Buy</i></b> (Green Background Color)<br><b><i>- Sell</b></i> (Red Background Color)<br><b><i>- Hold</i></b> (Yellow Background Color)</small>"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
           introBox(
           withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = "<center><b>Trading Assitance Section</b></center><br><small>These four box will show Technical Analysis result from InvestNow stock analyst.</small>"),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = div(style = "text-align:justify",HTML(paste( "<center><b><u>Trading Assitance Section</u></b></center><br><small>These four box will show Technical Analysis result from InvestNow stock analyst.</small>")))),
           div(#style = "position: absolute; left: 10em;",
-            dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                           right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
+            dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System:<b> MACD </b></center>")),
+                           right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
       )
     })
   }, ignoreNULL = FALSE, ignoreInit = FALSE, once = F)
@@ -277,7 +280,7 @@ function(input, output, session) {
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 98.60% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
             paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -286,8 +289,8 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "isat_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "isat_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "isat_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
     
@@ -398,7 +401,7 @@ function(input, output, session) {
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 96.41% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
             paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -407,8 +410,8 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
     
@@ -519,7 +522,7 @@ function(input, output, session) {
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 97.89% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
             paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -528,8 +531,8 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),tooltip = tooltipOptions(title = "Additional Information!"))
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
     
@@ -640,7 +643,7 @@ function(input, output, session) {
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
           dropdownButton(HTML(paste("<b><center>Accuracy: 99.29% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("gear"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
             paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u>
@@ -649,8 +652,8 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "wika_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "wika_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "wika_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Technical Analysis Importance: MACD </b></center>")),
-                         right = TRUE, size = "sm",circle = FALSE,icon = icon("gear"), tooltip = tooltipOptions(title = "Additional Information!"))
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+                         right = TRUE, size = "sm",circle = FALSE,icon = icon("info-circle"), tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
     
@@ -754,7 +757,7 @@ function(input, output, session) {
               hoverinfo = 'text') %>%
       layout(
         xaxis = list(
-          title = "Day", 
+          title = "Date", 
           zeroline = F,
           rangeselector = list( 
             buttons = list(
@@ -893,7 +896,7 @@ function(input, output, session) {
               hoverinfo = 'text') %>%
       layout(
         xaxis = list(
-          title = "Day", 
+          title = "Date", 
           zeroline = F,
           rangeselector = list( 
             buttons = list(
@@ -1033,7 +1036,7 @@ function(input, output, session) {
               hoverinfo = 'text') %>%
       layout(
         xaxis = list(
-          title = "Day", 
+          title = "Date", 
           zeroline = F,
           rangeselector = list( 
             buttons = list(
@@ -1173,7 +1176,7 @@ function(input, output, session) {
               hoverinfo = 'text') %>%
       layout(
         xaxis = list(
-          title = "Day", 
+          title = "Date", 
           zeroline = F,
           rangeselector = list( 
             buttons = list(
@@ -1314,7 +1317,7 @@ function(input, output, session) {
               hoverinfo = 'text') %>%
       layout(
         xaxis = list(
-          title = "Day", 
+          title = "Date", 
           zeroline = F,
           rangeselector = list( 
             buttons = list(
@@ -1710,7 +1713,9 @@ function(input, output, session) {
   output$bbri_history <- DT::renderDataTable({
     bbri_hist <- bbri_dt_backtest %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit") %>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(bbri_hist, rownames = F,
                   extensions = 'Buttons',
@@ -1773,7 +1778,10 @@ function(input, output, session) {
     
     bbri_hist2 <- bbri_hist2 %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
+    
     
     DT::datatable(bbri_hist2, 
                   rownames = F,
@@ -2002,7 +2010,9 @@ function(input, output, session) {
   output$isat_history <- DT::renderDataTable({
     isat_hist <- isat_dt_backtest %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit") %>% 
+     mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(isat_hist, rownames = F,
                   extensions = 'Buttons',
@@ -2065,7 +2075,9 @@ function(input, output, session) {
     
     isat_hist2 <- isat_hist2 %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(isat_hist2, 
                   rownames = F,
@@ -2293,7 +2305,9 @@ function(input, output, session) {
   output$sido_history <- DT::renderDataTable({
     sido_hist <- sido_dt_backtest %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(sido_hist, rownames = F,
                   extensions = 'Buttons',
@@ -2356,7 +2370,9 @@ function(input, output, session) {
     
     sido_hist2 <- sido_hist2 %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(sido_hist2, 
                   rownames = F,
@@ -2584,7 +2600,9 @@ function(input, output, session) {
   output$hoki_history <- DT::renderDataTable({
     hoki_hist <- hoki_dt_backtest %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(hoki_hist, rownames = F,
                   extensions = 'Buttons',
@@ -2647,7 +2665,9 @@ function(input, output, session) {
     
     hoki_hist2 <- hoki_hist2 %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit")%>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(hoki_hist2, 
                   rownames = F,
@@ -2875,7 +2895,9 @@ function(input, output, session) {
   output$wika_history <- DT::renderDataTable({
     wika_hist <- wika_dt_backtest %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit") %>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(wika_hist, rownames = F,
                   extensions = 'Buttons',
@@ -2938,7 +2960,9 @@ function(input, output, session) {
     
     wika_hist2 <- wika_hist2 %>% 
       filter(date >= input$date_select[1] & date <= input$date_select[2]) %>% 
-      select("date", "open", "close", "stock_buy", "stock_sell", "profit")
+      select("date", "open", "close", "stock_buy", "stock_sell", "profit") %>% 
+      mutate(profit = round(as.numeric(profit), 2))%>% 
+      magrittr::set_names(c("Date", "Open", "Close", "Stock Buy", "Stock Sell", "Profit"))
     
     DT::datatable(wika_hist2, 
                   rownames = F,
