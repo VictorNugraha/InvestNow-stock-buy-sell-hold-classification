@@ -140,26 +140,26 @@ function(input, output, session) {
                      span(textOutput("price_bbri2"), style = "font-size: 25px"), 
                      textOutput("date_bbri2"), 
                      withSpinner(plotlyOutput("bri_adv"), type = 8,size = 0.5, color = "gray"))
-          ), data.position = "right", data.step = 2,data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>Trading Assitance Section</u></b></center><br><small>Please choose the more convenient plot from one of the plots below to see the movement of stock prices.</small>")))),
+          ), data.position = "right", data.step = 3,data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>Trading Assitance Section</u></b></center><br><small>Please choose the more convenient plot from one of the plots below to see the movement of stock prices.</small>")))),
       )
     })
     
     output$suggestion <- renderUI({
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
           tags$head(tags$style(HTML(".small-box {height: 95px}"))),
-          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 3,data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>This box will show the suggestion from the Machine Learning.<br><b><i>- Buy</i></b> (Green Background Color)<br><b><i>- Sell</b></i> (Red Background Color)<br><b><i>- Hold</i></b> (Yellow Background Color)</small>"),
-          dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
-                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
+          introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 4,data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>This box will show the suggestion from the Machine Learning.<br><b><i>- Buy</i></b> (Green Background Color)<br><b><i>- Sell</b></i> (Red Background Color)<br><b><i>- Hold</i></b> (Yellow Background Color)</small>"),
+          column(width = 4,introBox(dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
+                         right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),data.step = 5,data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>Trading Assitance Section</u></b></center><br><small>By click this button you will you will shown the performance of machine learning in giving a suggetion in term of accuracy.</small>"))))),
           hr(),
           HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
           introBox(
           withSpinner(valueBoxOutput(outputId = "bbri_ta_sma", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "bbri_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
-          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 4,data.intro = div(style = "text-align:justify",HTML(paste( "<center><b><u>Trading Assitance Section</u></b></center><br><small>These four box will show Technical Analysis result from InvestNow stock analyst.</small>")))),
+          withSpinner(valueBoxOutput(outputId = "bbri_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"), data.step = 6,data.intro = div(style = "text-align:justify",HTML(paste( "<center><b><u>Trading Assitance Section</u></b></center><br><small>These four box will show Technical Analysis result from InvestNow stock analyst.</small>")))),
           div(#style = "position: absolute; left: 10em;",
-            dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System:<b> MACD </b></center>")),
-                           right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )))
+          column(width = 4,introBox(dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System:<b> MACD </b></center>")),
+                           right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),up = F,tooltip = tooltipOptions(title = "Technical Analysis Importance" )),data.step = 7,data.intro = div(style = "text-align:justify",HTML(paste( "<center><b><u>Trading Assitance Section</u></b></center><br><small>By click this button you will you will shown the most considerable technical analysis by machine learning in making a suggestion.</small>"))))))
       )
     })
   }, ignoreNULL = FALSE, ignoreInit = FALSE, once = F)
@@ -410,7 +410,7 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>RSI </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
@@ -531,7 +531,7 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>RSI </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
@@ -1484,7 +1484,7 @@ function(input, output, session) {
                    inputId = "date_select",
                    label = NULL,
                    start = "2018-01-02",
-                   end = "2021-06-30",
+                   end = "2020-05-30",
                    min = "2018-01-01",
                    max = "2023-12-31")
   })

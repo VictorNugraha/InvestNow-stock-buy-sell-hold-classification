@@ -3,9 +3,7 @@ fluidPage(
   list(tags$head(HTML('<link rel="icon", href="MyIcon.png", 
                                    type="image/png" />'))),
   div(style="padding: 1px 0px; width: '100%'",
-      titlePanel(
-        title="", windowTitle="InvestNow"
-      )
+      titlePanel(title="", windowTitle="InvestNow")
   ),
   
   introjsUI(),
@@ -270,7 +268,7 @@ fluidPage(
     navbarMenu("Portfolio",
                tabPanel(title = "Trading Assitance",
                         value = 'trading',
-                        fluidRow(
+                        fluidRow(introBox(data.position = "right", data.step = 1, data.intro = "<center><b><u>Trading Assistance</b></u></center><br><small><center>Now we will start introduction tour at <b><i>Trading Assistance</b></i> section.</center></small>"),
                           column(width = 12, uiOutput("modal_dialog")),
                           column(width = 12, uiOutput("text1")),
                           column(width = 3),
@@ -306,7 +304,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 1, data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
+                                                  border-color: whitesmoke"),data.step = 2, data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -320,7 +318,7 @@ fluidPage(
                                 width = 9,
                                 uiOutput("plot_output")),
                               box(
-                                collapsible = T,
+                                collapsible = F,
                                 width = 3,
                                 uiOutput("suggestion"))
                             )
@@ -330,7 +328,7 @@ fluidPage(
                
                # Tab Panel Portfolio - G/L Simulator---     
                tabPanel(title = "G/L Simulator",
-                        fluidRow(introBox(data.position = "right", data.step = 5, data.intro = "<center><b><u>G/L Simulator Section</b></u></center><br><small><center>Now we will start introduction tour at <b><i>G/L Simulator</b></i> section.</center></small>"),
+                        fluidRow(introBox(data.position = "right", data.step = 8, data.intro = "<center><b><u>G/L Simulator Section</b></u></center><br><small><center>Now we will start introduction tour at <b><i>G/L Simulator</b></i> section.</center></small>"),
                           column(width = 12, uiOutput("text2")),
                           column(width = 3),
                           column(width = 6,
@@ -365,7 +363,7 @@ fluidPage(
                                               label = strong('WIKA'),
                                               style = "color: black;
                                                   background-color: whitesmoke;
-                                                  border-color: whitesmoke"),data.step = 6, data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
+                                                  border-color: whitesmoke"),data.step = 9, data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select one of this button to observe other stock.</small>"),
                                  align = "center",
                                  style = "margin-bottom: 10px;",
                                  style = "margin-top: -10px;",
@@ -376,14 +374,14 @@ fluidPage(
                             fluidRow(column(width = 12, uiOutput("text3"))),
                             fluidRow(
                               column(width = 4),
-                              column(width = 4, introBox(uiOutput("calender"),data.step =7,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select start and end date to see profit earned from that range of time.</small>")),
+                              column(width = 4, introBox(uiOutput("calender"),data.step =10,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Please select start and end date to see profit earned from that range of time.</small>")),
                               column(width = 4)
                             ),
                             fluidRow(
                               box(
-                                collapsible = T,
+                                collapsible = F,
                                 width = 6,
-                                introBox(uiOutput("comparison_with_ml"), data.step = 8,
+                                introBox(uiOutput("comparison_with_ml"), data.step = 11,
                                          data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>G/L Simulator Section</u></b></center><br><small>In this section will be shown result with Machine Learning assitance.
                                          <br><b><i>- Total Buy Signal:</b></i> Indicates 1 stock will be buy at Opening Price.
                                          <br><b><i>- Total Sell Signal:</b></i> Indicates all the stock bought from accumulated from previous buy singal will be sell at the Closing Price.
@@ -393,9 +391,9 @@ fluidPage(
                                          </small>"))))
                               ),
                               box(
-                                collapsible = T,
+                                collapsible = F,
                                 width = 6,
-                                introBox(uiOutput("comparison_wo_ml"),data.step = 9,
+                                introBox(uiOutput("comparison_wo_ml"),data.step = 12,
                                          data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>G/L Simulator Section</u></b></center><br><small>In this section will be shown result without Machine Learning assitance.
                                          <br><b><i>- Total Buy Signal:</b></i> Indicates 10 stock will be buy at Opening Price based on input date.
                                          <br><b><i>- Total Sell Signal:</b></i> Indicates all the stock bought will be sell at the Closing Price based on end date.
@@ -405,14 +403,14 @@ fluidPage(
                                          </small>"))))
                               ),
                               box(
-                                collapsible = T,
+                                collapsible = F,
                                 width = 6,
-                                introBox(uiOutput("history_with_ml"), data.position = "right", data.step = 10,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history with Machine Learning.</small>")
+                                introBox(uiOutput("history_with_ml"), data.position = "right", data.step = 13,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history with Machine Learning.</small>")
                               ),
                               box(
-                                collapsible = T,
+                                collapsible = F,
                                 width = 6,
-                                introBox(uiOutput("history_wo_ml"), data.position = "left", data.step = 11,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history without Machine Learning.</small>")
+                                introBox(uiOutput("history_wo_ml"), data.position = "left", data.step = 14,data.intro = "<center><b><u>G/L Simulator Section</u></b></center><br><small>Trading history without Machine Learning.</small>")
                               )
                             )
                           )
@@ -422,8 +420,119 @@ fluidPage(
     
     #------------------------------
     #NAV BAR TAB PANEL PROFILE---  
-    # tabPanel(title = "Profile",
-    #          "Profile"),
+    tabPanel(title = "Profile",
+             fluidRow(
+               # Text & Image Portfolio Management
+               # Image Part
+               column(
+                 br(), 
+                 tags$img(src="pp.jpg",
+                          width="200px",
+                          height="200px"),
+                 align = "center",
+                 style = "margin-bottom: 10px;",
+                 style = "margin-top: -10px;",
+                 width = 2
+               ),
+               br(), br(),
+               
+               #Text Part
+               column(
+                 div(
+                   style="text-align:justify;
+                                     font-size: 15px;
+                                     color:black;
+                                     background-color: whitesmoke ;
+                                     border-color:black;
+                                     padding:15px;
+                                     border-radius:10px;
+                                     border-size:15px",
+                   HTML(
+                     paste(
+                       "<b><center><h4>Hi, I'm Victor. Nice to meet you!</center></u></b></h4>
+                        <br>
+                        <center>
+                        I have 2 years plus experienced in Product role with a demonstrated history of working in B2C & B2B Company to conduct product analysis and product management, 
+                        with additional Data Science certified skill from Hacktiv8 Indonesia and Algoritma Data Science School in R and Python languages to discover the hidden information in vast 
+                        amount of data and develop various kinds of machine learning model.</center>
+                        <br>
+                        <center><a href= https://drive.google.com/drive/folders/1GVD9DWNP3fhv2UwAk7gqKH5dVncUVtQK><b><i>Curriculum Vitae (CV)</b></i></a>
+                        "
+                     )
+                   )
+                 ),
+                 width = 10
+               )
+              ),hr(),
+             fluidRow(
+               column(width = 4),
+               column(
+                 div(
+                   style="text-align:justify;
+                                     font-size: 15px;
+                                     color:black;
+                                     background-color: white ;
+                                     border-color:black;
+                                     border-radius:10px;
+                                     border-size:15px",
+                   HTML(
+                     paste(
+                       "<b><center><h4><u>CASE STUDY</center></u></b></h4><br>"
+                     )
+                   )
+                 ),
+                 width = 4
+               ),
+               column(width = 4),
+               box(
+                 collapsible = F,
+                 width = 4,
+                 div(
+                   HTML(paste("<b><center><u>Flask API</b></center></u><br>
+                              <small>This is my first capstone project at Algoritma, I built a Flask API to automatic extract name entities using Spacy Framework.</small>
+                              <br><small>- Application link: </small><a href= https://app-ner-flask-api.herokuapp.com/><b><i><small>Click Here!</b></i></a></small>
+                              <br><small>- Source code link: </small><a href= https://github.com/VictorNugraha/CAPSTONE-NER_FlaskAPI><b><i><small>Click Here!</b></i></a></small>")))
+                 ),
+               box(
+                 collapsible = F,
+                 width = 4,
+                 div(
+                   HTML(paste("<b><center><u>RPubs Documentation</b></center></u><br>
+                              <small>In honing my skills as a data science I wrote a simple research about how to take advantage of machine learning in several fields such as: insurance, education, social assistance, etc.</small>
+                              <br><small>- Rpubs link: </small><a href= https://rpubs.com/VicNP><b><i><small>Click Here!</b></i></a></small>
+                              ")))
+                 ),
+               box(
+                 collapsible = F,
+                 width = 4,
+                 div(
+                   HTML(paste("<b><center><u>Shiny Dashboard</b></center></u><br>
+                              <small>In my second capstone project at Algoritma, I built a simple yet interactive dashboard using R-Shiny about FAANG Stock.</small>
+                              <br><small>- Application link: </small><a href= https://vicnp.shinyapps.io/faang-stock-dashboard/><b><i><small>Click Here!</b></i></a></small>
+                              <br><small>- Source code link: </small><a href= https://github.com/VictorNugraha/Shiny-Dashboard-FAANG_Stock><b><i><small>Click Here!</b></i></a></small>")))
+                 ),
+             ),
+             fluidRow(
+               column(
+                 tags$img(src="gif/rest_api_gif.gif",
+                          width="375px",
+                          height="200px"),
+                 width = 4
+               ), 
+               column(
+                 tags$img(src="RPubs_icon.png",
+                          width="400px",
+                          height="200px"),
+                 width = 4
+               ),
+               column(
+                 tags$img(src="gif/faang_dashboard.gif",
+                          width="375px",
+                          height="200px"),
+                 width = 4
+               )
+             )
+            ),
     
     #------------------------------
     #FOOTER--- 
