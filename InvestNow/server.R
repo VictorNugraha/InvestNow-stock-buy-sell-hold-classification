@@ -1,7 +1,9 @@
 function(input, output, session) {
   
+  shinyjs::addClass(id = "inTabset", class = "navbar-right")
+
   #------------------------------  
-  #NAV BAR TAB PANEL ABOUT-HOME PAGE---  
+  #NAV BAR TAB PANEL HOME PAGE---  
   
   # Output slide show slicker---
   output$slide_show <- renderSlickR({
@@ -13,7 +15,7 @@ function(input, output, session) {
       settings(dots = TRUE, autoplay = TRUE)
   })
   
-  # Output render image About - Home---
+  # Output render image Home---
   output$image <- renderImage({
     
     list(src = "www/3.png",
@@ -28,6 +30,18 @@ function(input, output, session) {
   output$image2 <- renderImage({
     
     list(src = "www/howithelps.png",
+         width = "100%",
+         height = "100%")
+    
+  }, deleteFile = F)
+  
+  #NAV BAR TAB PANEL ABOUT-ARCHITECTURE---  
+  
+  # Output render image About - How We Help---
+  
+  output$arch <- renderImage({
+    
+    list(src = "www/arch/architecture_data.png",
          width = "100%",
          height = "100%")
     
@@ -148,7 +162,7 @@ function(input, output, session) {
       div(HTML(paste("<b><center><u>BBRI TODAY SUGGESTION :</b></center></u><br>")),
           tags$head(tags$style(HTML(".small-box {height: 95px}"))),
           introBox(valueBoxOutput(outputId = "prediction_result_bbri", width = 12),data.step = 4,data.intro = "<center><b><u>Trading Assitance Section</u></b></center><br><small>This box will show the suggestion from the Machine Learning.<br><b><i>- Buy</i></b> (Green Background Color)<br><b><i>- Sell</b></i> (Red Background Color)<br><b><i>- Hold</i></b> (Yellow Background Color)</small>"),
-          column(width = 4,introBox(dropdownButton(HTML(paste("<b><center>Accuracy: 97.67% </b></center>")),
+          column(width = 4,introBox(dropdownButton(HTML(paste("<b><center>Accuracy: 99% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),data.step = 5,data.intro = div(style = "text-align:justify",HTML(paste("<center><b><u>Trading Assitance Section</u></b></center><br><small>By click this button you will you will shown the performance of machine learning in giving a suggetion in term of accuracy.</small>"))))),
           hr(),
           HTML(paste("<b><center><u>TECHNICAL ANALYSIS INDICATOR :</b></center></u><br>")),
@@ -279,7 +293,7 @@ function(input, output, session) {
       div(HTML(paste("<b><center><u>ISAT TODAY SUGGESTION :</b></center></u><br>")),
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_isat", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Accuracy: 98.60% </b></center>")),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 90.00% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
@@ -400,7 +414,7 @@ function(input, output, session) {
       div(HTML(paste("<b><center><u>SIDO TODAY SUGGESTION :</b></center></u><br>")),
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_sido", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Accuracy: 96.41% </b></center>")),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 90.00% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
@@ -410,7 +424,7 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "sido_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "sido_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>RSI </b></center>")),
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
@@ -521,7 +535,7 @@ function(input, output, session) {
       div(HTML(paste("<b><center><u>HOKI TODAY SUGGESTION :</b></center></u><br>")),
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_hoki", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Accuracy: 97.89% </b></center>")),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 97.34% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
@@ -531,7 +545,7 @@ function(input, output, session) {
           withSpinner(valueBoxOutput(outputId = "hoki_ta_ema", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_macd", width = 12), type = 8,size = 0.5, color = "gray"),
           withSpinner(valueBoxOutput(outputId = "hoki_ta_rsi", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>RSI </b></center>")),
+          dropdownButton(HTML(paste("<center>Most Considerable Technical Analysis By System: <b>MACD </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),tooltip = tooltipOptions(title = "Technical Analysis Importance!"))
       )
     })
@@ -642,7 +656,7 @@ function(input, output, session) {
       div(HTML(paste("<b><center><u>WIKA TODAY SUGGESTION :</b></center></u><br>")),
           withSpinner(
             valueBoxOutput(outputId = "prediction_result_wika", width = 12), type = 8,size = 0.5, color = "gray"),
-          dropdownButton(HTML(paste("<b><center>Accuracy: 99.29% </b></center>")),
+          dropdownButton(HTML(paste("<b><center>Accuracy: 93.81% </b></center>")),
                          right = TRUE,size = "sm",circle = FALSE,icon = icon("info-circle"),width = 100,up = F,tooltip = tooltipOptions(title = "Machine Learning Accuracy" )),
           hr(),
           HTML(
@@ -2968,5 +2982,12 @@ function(input, output, session) {
                   rownames = F,
                   options = list(autoWidth = FALSE, scrollX = TRUE))
   })
+  
+  output$downloadData <- downloadHandler(
+    filename = "CV--Victor Nugraha.pdf",
+    content = function(file) {
+      file.copy("www/pdf/CV--Victor Nugraha.pdf", file)
+    }
+  )
   
 }
