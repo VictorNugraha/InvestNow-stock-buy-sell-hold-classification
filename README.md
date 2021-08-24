@@ -1,4 +1,4 @@
-# stock-buy-hold-sell-classification
+# InvestNow
 This is my project for Data Career Day at Algoritma School of Data Sciece.
 
 Background (Bahasa Indonesia): https://rpubs.com/VicNP/proposal-dcd
