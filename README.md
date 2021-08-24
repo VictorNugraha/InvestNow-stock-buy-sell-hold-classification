@@ -1,5 +1,7 @@
 # InvestNow
 
+![](InvestNow_gif.gif)
+
 This is my project for Data Career Day at Algoritma School of Data Sciece. In this project I created a machine learning that can classify whether today an investor should buy or sell their stock.
 
 This project was create to provide benefits to 3 parties: 
