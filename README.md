@@ -15,7 +15,7 @@ Live Demo : https://vicnp.shinyapps.io/InvestNow/
 
 # InvestNow - Behind The Scene
 
-InvestNow was built in [R](https://www.r-project.org) , an open source programming language using the [Shiny package](https://shiny.rstudio.com), a web application framework for R. Users will need to download [R](https://cran.uni-muenster.de/) in order to use RadaR and we suggest the use of [RStudio](https://www.rstudio.com). R is completely free to use. All required code and library used can be found in this github repositroy.
+InvestNow was built in [R](https://www.r-project.org) , an open source programming language using the [Shiny package](https://shiny.rstudio.com), a web application framework for R. Users will need to download [R](https://cran.uni-muenster.de/) in order to use InvestNow and we suggest the use of [RStudio](https://www.rstudio.com). R is completely free to use. All required code and library used can be found in this github repositroy.
 
 For better understanding about step to step how to built InvestNow from collecting data - EDA - machine learning modeling, can be read [here](https://rpubs.com/VicNP/stock-market-timing-suggest).
 
