@@ -11,7 +11,7 @@ This project was create to provide benefits to 3 parties:
 
 More detailed background (Bahasa Indonesia): https://rpubs.com/VicNP/proposal-dcd
 
-Live Demo : https://vicnp.shinyapps.io/InvestNow/ (Arhived - Under Maintenance)
+Live Demo : https://vicnp.shinyapps.io/InvestNow/ (Archived - Under Maintenance)
 
 # InvestNow - Behind The Scene
 
